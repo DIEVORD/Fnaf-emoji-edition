@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>FNAF 2: Withered Edition - Noches 1-5</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{--bg:#020317;--accent:#2ecc71;--danger:#e74c3c;--warning:#f1c40f;}
+  body{margin:0;font-family:system-ui,sans-serif;background:linear-gradient(180deg,#020317,#071229);color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;}
+  .card{width:960px;max-width:98vw;background:linear-gradient(180deg,#081227,#071525);border-radius:16px;padding:15px;box-shadow:0 20px 60px rgba(0,0,0,0.9);border:1px solid #1c2533;}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  h1{font-size:20px;margin:0;}
+  .layout{display:flex;gap:15px;flex-wrap:wrap;}
+  .view{flex:2;background:#000;border-radius:12px;padding:12px;min-height:340px;position:relative;border:2px solid #222;}
+  .hud{flex:1;min-width:300px;background:#071522;border-radius:12px;padding:15px;border:1px solid #1c2533;display:flex;flex-direction:column;gap:12px;}
+  .office{display:flex;height:260px;background:#050505;border-radius:10px;overflow:hidden;border:1px solid #333;}
+  .door{width:90px;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+  .door-emoji{font-size:56px;}
+  .center-view{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;position:relative;}
+  .monster{font-size:100px;filter:drop-shadow(0 0 20px red);animation:shake 0.35s infinite;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(5px)}75%{transform:translateX(-5px)}}
+  .mask-active{position:absolute;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:10;font-size:28px;color:#ccc;}
+  .cams{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+  .cam-btn{background:#0f1724;border:1px solid #333;color:#aaa;padding:11px;border-radius:6px;cursor:pointer;font-size:13px;transition:0.2s;}
+  .cam-btn:hover{background:#1a2338;}
+  .cam-btn.active{background:var(--accent);color:#000;font-weight:bold;}
+  #camScreen{height:100px;background:#000;border:1px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--accent);text-shadow:0 0 10px var(--accent);}
+  .control-row{display:flex;justify-content:space-between;align-items:center;background:#0b1220;padding:12px;border-radius:8px;border:1px solid #1c2533;}
+  .btn-group{display:flex;gap:10px;}
+  .action-btn{padding:11px 18px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;transition:0.2s;}
+  .btn-light{background:#f1c40f;color:#000;}
+  .btn-mask{background:#4a69bd;color:#fff;}
+  .btn-mask:disabled{background:#1e3799;color:#888;cursor:not-allowed;}
+  #jumpscare{position:fixed;inset:0;background:#fff;z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;color:#000;font-size:180px;}
+  #jumpscare.active{display:flex;animation:jumpscare 0.9s;}
+  @keyframes jumpscare{0%{transform:scale(0)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
+  #message-bar{height:28px;text-align:center;color:var(--warning);font-weight:bold;font-size:16px;margin-bottom:8px;}
+  .power-bar{height:12px;background:#111;border-radius:6px;overflow:hidden;margin-top:5px;}
+  #power-fill{height:100%;background:linear-gradient(to right,#2ecc71,#27ae60);width:100%;transition:width 0.4s;}
+  .night-progress{height:6px;background:#111;border-radius:3px;overflow:hidden;margin-top:5px;}
+  #night-fill{height:100%;background:linear-gradient(to right,#3498db,#9b59b6);width:0%;transition:width 0.5s;}
+  .warning{animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+  
+  /* Menú */
+  #menu{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;}
+  .menu-title{font-size:40px;color:#fff;margin-bottom:30px;text-align:center;}
+  .menu-btn{background:var(--accent);color:#000;border:none;padding:15px 30px;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;transition:0.3s;min-width:200px;text-align:center;}
+  .menu-btn:hover{transform:scale(1.05);background:#27ae60;}
+  .menu-btn.secondary{background:#3498db;}
+  .menu-btn.secondary:hover{background:#2980b9;}
+  .menu-btn.danger{background:#e74c3c;}
+  .menu-btn.danger:hover{background:#c0392b;}
+  
+  /* Indicador de jugador */
+  .player-indicator{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.7);padding:5px 10px;border-radius:5px;font-size:12px;}
+  
+  /* Avisos de animatrónicos */
+  .door-warning{position:absolute;top:5px;left:0;right:0;text-align:center;font-size:12px;color:#e74c3c;font-weight:bold;animation:glow 1s infinite;}
+  @keyframes glow{0%,100%{opacity:1}50%{opacity:0.5}}
+  
+  /* Indicadores de presencia */
+  .presence-indicator{position:absolute;bottom:5px;left:0;right:0;text-align:center;font-size:10px;color:#f1c40f;}
+  
+  /* Efecto de linterna */
+  .flashlight{position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at center, transparent 100px, rgba(0,0,0,0.9) 200px);pointer-events:none;z-index:5;display:none;}
+  
+  /* Barra de progreso para Foxy */
+  .foxy-progress{height:6px;background:#111;border-radius:3px;overflow:hidden;margin-top:5px;width:100%;}
+  #foxy-fill{height:100%;background:linear-gradient(to right,#e74c3c,#c0392b);width:0%;transition:width 0.3s;}
+
+
+/* RESPONSIVE DESIGN - FNAF 2 - CORREGIDO */
+@media (max-width: 1024px) {
+  .card { 
+    width: 98vw; 
+    padding: 12px;
+    margin: 10px;
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+  body {
+    height: auto;
+    min-height: 100vh;
+    padding: 10px 0;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout { 
+    flex-direction: column; 
+    gap: 10px;
+  }
+  .view, .hud { 
+    width: 100%;
+    min-height: auto;
+  }
+  .office { 
+    height: 180px; 
+    min-height: 180px;
+  }
+  .door { 
+    width: 80px; 
+    min-width: 80px;
+  }
+  .monster { font-size: 70px; }
+  .door-emoji { font-size: 45px; }
+  .cams { 
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  #camScreen { 
+    height: 90px; 
+    font-size: 28px; 
+  }
+  .action-btn { 
+    padding: 10px 14px; 
+    font-size: 13px; 
+  }
+  .top { 
+    flex-direction: column; 
+    gap: 8px; 
+    text-align: center; 
+    margin-bottom: 15px;
+  }
+  h1 { font-size: 18px; }
+  #message-bar {
+    margin-bottom: 12px;
+    height: 32px;
+    font-size: 14px;
+  }
+  .btn-group { 
+    flex-direction: row; 
+    gap: 8px; 
+  }
+}
+
+@media (max-width: 480px) {
+  .card { 
+    padding: 8px;
+    margin: 5px;
+  }
+  .office { 
+    height: 150px; 
+    min-height: 150px;
+  }
+  .door { 
+    width: 70px; 
+    min-width: 70px;
+  }
+  .monster { font-size: 50px; }
+  .door-emoji { font-size: 35px; }
+  .cams { 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 6px;
+  }
+  .cam-btn { 
+    padding: 10px 6px; 
+    font-size: 12px; 
+    min-height: 40px;
+  }
+  #camScreen { 
+    height: 70px; 
+    font-size: 22px; 
+  }
+  .control-row { 
+    padding: 10px; 
+    font-size: 13px; 
+  }
+  .action-btn { 
+    padding: 8px 12px; 
+    font-size: 12px; 
+    min-width: 80px;
+  }
+  .btn-group {
+    gap: 6px;
+  }
+  .mask-active { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <div class="menu-title">FNAF 2: Withered Edition</div>
+  <button class="menu-btn" id="btn-single">Un Jugador</button>
+  <button class="menu-btn secondary" id="btn-multi">Dos Jugadores</button>
+  <button class="menu-btn" id="btn-continue">Continuar Noche</button>
+  <button class="menu-btn danger" id="btn-reset">Reiniciar Progreso</button>
+</div>
+
+<div class="card" style="display:none;">
+  <div class="top">
+    <h1>FNAF 2: Withered Edition</h1>
+    <div>Noche <span id="night-num">1</span> | <span id="clock">12:00 AM</span> | Energía: <span id="power-pct">100%</span></div>
+  </div>
+  <div id="message-bar"></div>
+
+  <div class="layout">
+    <div class="view">
+      <div class="player-indicator" id="player-indicator">Jugador 1</div>
+      <div class="office">
+        <div class="door" id="door-left">
+          <div style="font-size:12px;">VENT IZQ</div>
+          <div id="d-left" class="door-emoji">🕳️</div>
+          <div id="warning-left" class="door-warning" style="display:none;">¡PELIGRO!</div>
+          <div id="presence-left" class="presence-indicator" style="display:none;"></div>
+        </div>
+        <div class="center-view" id="main-view">
+          <div id="flashlight" class="flashlight"></div>
+          <div style="color:#333;font-size:14px;">Oficina oscura...</div>
+          <div id="mask-view" class="mask-active" style="display:none">
+            🎭 MÁSCARA PUESTA
+            <div style="color:#f1c40f;margin-top:15px;font-size:16px;">La mayoría se irá...</div>
+            <div id="mask-warning" style="color:var(--danger);margin-top:15px;font-size:20px;display:none;">¡QUÍTATELA YA!</div>
+          </div>
+        </div>
+        <div class="door" id="door-right">
+          <div style="font-size:12px;">PUERTA</div>
+          <div id="d-right" class="door-emoji">🚪</div>
+          <div id="warning-right" class="door-warning" style="display:none;">¡FOXY!</div>
+          <div id="presence-right" class="presence-indicator" style="display:none;"></div>
+          <div class="foxy-progress" style="display:none;">
+            <div id="foxy-fill"></div>
+          </div>
+        </div>
+      </div>
+      <div class="night-progress"><div id="night-fill"></div></div>
+    </div>
+
+    <aside class="hud">
+      <div style="font-size:14px;color:#aaa;">Cámaras</div>
+      <div class="cams" id="cam-grid"></div>
+      <div id="camScreen">...</div>
+      <div class="power-bar"><div id="power-fill"></div></div>
+
+      <div class="control-row">
+        <span id="mask-status">MÁSCARA LISTA</span>
+        <button class="action-btn btn-mask" id="btn-mask">Poner Máscara</button>
+      </div>
+
+      <div class="control-row">
+        <span>CONTROLES</span>
+        <div class="btn-group">
+          <button class="action-btn btn-light" id="btn-light-l">Linterna IZQ</button>
+          <button class="action-btn btn-light" id="btn-light-r">Linterna DER</button>
+        </div>
+      </div>
+      
+      <div style="font-size:11px;color:#777;text-align:center;">
+        💡 Mantén presionada la cámara del Puppet<br>
+        🔦 Alumbra 5s a Foxy en la puerta
+      </div>
+      
+      <button class="action-btn" id="btn-menu" style="background:#7f8c8d;margin-top:10px;">Volver al Menú</button>
+    </aside>
+  </div>
+</div>
+
+<div id="jumpscare">
+  <div id="jumpscare-face">💀</div>
+  <div id="jumpscare-reason" style="font-size:40px;margin-top:30px;">GAME OVER</div>
+</div>
+
+<script>
+// ANIMATRÓNICOS DE FNAF 2 - TODOS ACTIVOS DESDE EL INICIO
+const ANIMATRONICS = [
+  // Withered Animatronics
+  {id:"Withered Freddy", emoji:"🧸💀", type:"withered", scaredByMask: true, aiLevel: 1},
+  {id:"Withered Bonnie", emoji:"🐰💀", type:"withered", scaredByMask: true, aiLevel: 1},
+  {id:"Withered Chica",  emoji:"🐤💀", type:"withered", scaredByMask: true, aiLevel: 1},
+  {id:"Withered Foxy",   emoji:"🦊💀", type:"withered", scaredByMask: false, aiLevel: 1, isFoxy: true},
+  
+  // Toy Animatronics
+  {id:"Toy Freddy",  emoji:"🧸🎯", type:"toy", scaredByMask: true, aiLevel: 1},
+  {id:"Toy Bonnie",  emoji:"🐇",   type:"toy", scaredByMask: true, aiLevel: 1},
+  {id:"Toy Chica",   emoji:"🐥",   type:"toy", scaredByMask: true, aiLevel: 1},
+  {id:"Mangle",      emoji:"🦝🔧", type:"mangle", scaredByMask: true, aiLevel: 1},
+  
+  // Especiales
+  {id:"Balloon Boy", emoji:"🤡",   type:"bb", scaredByMask: false, aiLevel: 1, isBB: true},
+  {id:"Puppet",      emoji:"🎭",   type:"puppet", scaredByMask: false, aiLevel: 1, isPuppet: true},
+  {id:"GoldenFreddy",emoji:"🌟",   isGolden:true, attackTime:15000, scaredByMask: false, aiLevel: 1}
+];
+
+const ACTIVE_ANIMS = ANIMATRONICS.filter(a => !a.isGolden);
+const GF = ANIMATRONICS.find(a => a.isGolden);
+const FOXY = ANIMATRONICS.find(a => a.isFoxy);
+const PUPPET = ANIMATRONICS.find(a => a.isPuppet);
+const BB = ANIMATRONICS.find(a => a.isBB);
+
+// ESTADO
+let state = {
+  night: 1,
+  power: 100,
+  startTime: 0,
+  cams: Array(11).fill().map(()=>[]),
+  office: {left:[], right:[]},
+  lights: {left:false, right:false},
+  currentCam: 1,
+  gameOver: false,
+  mask: {isWearing:false, totalWornTime:0, maxWearTime:60000, lastTime:Date.now()}, // SIN COOLDOWN
+  gameMode: "single",
+  currentPlayer: 1,
+  foxyProgress: 0,
+  puppetContained: false,
+  puppetTimer: null
+};
+
+let danger = {left:{anim:null,timer:null}, right:{anim:null,timer:null}, gf:{timer:null}, foxy:{timer:null}};
+let gameInterval, aiInterval;
+let lightTimer = {left: 0, right: 0};
+
+// UI
+const ui = {
+  menu: document.getElementById('menu'),
+  game: document.querySelector('.card'),
+  nightNum: document.getElementById('night-num'),
+  clock: document.getElementById('clock'),
+  powerPct: document.getElementById('power-pct'),
+  powerFill: document.getElementById('power-fill'),
+  nightFill: document.getElementById('night-fill'),
+  messageBar: document.getElementById('message-bar'),
+  mainView: document.getElementById('main-view'),
+  maskView: document.getElementById('mask-view'),
+  maskWarning: document.getElementById('mask-warning'),
+  dLeft: document.getElementById('d-left'),
+  dRight: document.getElementById('d-right'),
+  camScreen: document.getElementById('camScreen'),
+  camGrid: document.getElementById('cam-grid'),
+  maskBtn: document.getElementById('btn-mask'),
+  maskStatus: document.getElementById('mask-status'),
+  jumpscare: document.getElementById('jumpscare'),
+  jumpscareFace: document.getElementById('jumpscare-face'),
+  jumpscareReason: document.getElementById('jumpscare-reason'),
+  playerIndicator: document.getElementById('player-indicator'),
+  btnMenu: document.getElementById('btn-menu'),
+  warningLeft: document.getElementById('warning-left'),
+  warningRight: document.getElementById('warning-right'),
+  presenceLeft: document.getElementById('presence-left'),
+  presenceRight: document.getElementById('presence-right'),
+  flashlight: document.getElementById('flashlight'),
+  foxyFill: document.getElementById('foxy-fill'),
+  foxyProgressBar: document.querySelector('.foxy-progress')
+};
+
+// SISTEMA DE GUARDADO
+function saveGame() {
+  const saveData = {
+    night: state.night,
+    mode: state.gameMode
+  };
+  localStorage.setItem('fnaf2_save', JSON.stringify(saveData));
+}
+
+function loadGame() {
+  const saveData = localStorage.getItem('fnaf2_save');
+  if (saveData) {
+    const data = JSON.parse(saveData);
+    state.night = data.night || 1;
+    state.gameMode = data.mode || "single";
+    return true;
+  }
+  return false;
+}
+
+function resetGame() {
+  localStorage.removeItem('fnaf2_save');
+  state.night = 1;
+  state.gameMode = "single";
+}
+
+// MENÚ PRINCIPAL
+function showMenu() {
+  clearIntervals();
+  ui.menu.style.display = 'flex';
+  ui.game.style.display = 'none';
+  
+  document.getElementById('btn-continue').disabled = !loadGame();
+}
+
+function startGame(mode, continueGame = false) {
+  if (!continueGame) {
+    state.night = mode === "multi" ? 1 : state.night;
+    state.gameMode = mode;
+  }
+  
+  ui.menu.style.display = 'none';
+  ui.game.style.display = 'block';
+  
+  initGame();
+}
+
+function clearIntervals() {
+  if (gameInterval) clearInterval(gameInterval);
+  if (aiInterval) clearInterval(aiInterval);
+  if (state.puppetTimer) clearTimeout(state.puppetTimer);
+}
+
+// INICIALIZACIÓN DEL JUEGO
+function initGame() {
+  state.startTime = Date.now();
+  state.power = 100;
+  state.cams = Array(11).fill().map(()=>[]);
+  state.office = {left:[], right:[]};
+  state.lights = {left:false, right:false};
+  state.currentCam = 1;
+  state.gameOver = false;
+  state.mask = {isWearing:false, totalWornTime:0, maxWearTime:60000, lastTime:Date.now()}; // SIN COOLDOWN
+  state.currentPlayer = 1;
+  state.foxyProgress = 0;
+  state.puppetContained = false;
+
+  danger = {left:{anim:null,timer:null}, right:{anim:null,timer:null}, gf:{timer:null}, foxy:{timer:null}};
+  lightTimer = {left: 0, right: 0};
+
+  // Actualizar UI
+  ui.nightNum.textContent = state.night;
+  ui.playerIndicator.textContent = state.gameMode === "multi" ? "Jugador 1" : "Jugador";
+  
+  // Ocultar avisos
+  ui.warningLeft.style.display = 'none';
+  ui.warningRight.style.display = 'none';
+  ui.presenceLeft.style.display = 'none';
+  ui.presenceRight.style.display = 'none';
+  ui.flashlight.style.display = 'none';
+  ui.foxyProgressBar.style.display = 'none';
+  ui.foxyFill.style.width = '0%';
+  
+  // Configurar cámaras
+  ui.camGrid.innerHTML = '';
+  for(let i=1;i<=10;i++){
+    let b = document.createElement('button');
+    b.className='cam-btn'; 
+    b.textContent='CAM '+i; 
+    b.onclick=()=>{
+      setCam(i);
+      // Contener al Puppet si estamos en su cámara
+      if (i === 7) { // Cámara del Puppet
+        containPuppet();
+      }
+    }; 
+    b.id='cam'+i;
+    ui.camGrid.appendChild(b);
+  }
+  document.getElementById('cam1').classList.add('active');
+
+  // Configurar controles - SOLO LINTERNAS
+  document.getElementById('btn-light-l').onclick = () => startLight('left');
+  document.getElementById('btn-light-l').onmouseup = () => stopLight('left');
+  document.getElementById('btn-light-l').onmouseleave = () => stopLight('left');
+  
+  document.getElementById('btn-light-r').onclick = () => startLight('right');
+  document.getElementById('btn-light-r').onmouseup = () => stopLight('right');
+  document.getElementById('btn-light-r').onmouseleave = () => stopLight('right');
+  
+  ui.maskBtn.onclick = toggleMask;
+  ui.btnMenu.onclick = showMenu;
+
+  // TODOS los animatrónicos activos desde el inicio
+  ACTIVE_ANIMS.forEach(anim => {
+    const cam = Math.floor(Math.random()*10)+1;
+    state.cams[cam].push(anim);
+  });
+
+  updateCamScreen();
+  updateView();
+  updateDoorWarnings();
+  
+  // Iniciar bucles del juego
+  clearIntervals();
+  gameInterval = setInterval(gameLoop, 100);
+  aiInterval = setInterval(moveAI, Math.max(6000, 12000 - (state.night*800)));
+  
+  // Iniciar IA del Puppet
+  startPuppetAI();
+  
+  saveGame();
+}
+
+// CONTENER AL PUPPET
+function containPuppet() {
+  state.puppetContained = true;
+  if (state.puppetTimer) clearTimeout(state.puppetTimer);
+  state.puppetTimer = setTimeout(() => {
+    state.puppetContained = false;
+    showMessage("¡El Puppet se está liberando!", 2000);
+  }, 5000);
+}
+
+// IA DEL PUPPET
+function startPuppetAI() {
+  const puppetAttack = () => {
+    if (state.gameOver || state.puppetContained) return;
+    
+    if (Math.random() < 0.1 + (state.night * 0.05)) {
+      triggerJumpscare(PUPPET, "¡El Puppet te atrapó!");
+      return;
+    }
+    
+    state.puppetTimer = setTimeout(puppetAttack, 8000 - (state.night * 1000));
+  };
+  
+  state.puppetTimer = setTimeout(puppetAttack, 10000);
+}
+
+// ACTUALIZAR AVISOS DE PUERTAS
+function updateDoorWarnings() {
+  // Ventilación izquierda
+  if (state.office.left.length > 0) {
+    const anim = state.office.left[0];
+    ui.warningLeft.style.display = 'block';
+    ui.presenceLeft.style.display = 'block';
+    ui.presenceLeft.textContent = anim.isGolden ? 'GOLDEN FREDDY' : anim.id;
+    ui.presenceLeft.style.color = anim.isGolden ? 'gold' : '#f1c40f';
+  } else {
+    ui.warningLeft.style.display = 'none';
+    ui.presenceLeft.style.display = 'none';
+  }
+  
+  // Puerta derecha (Foxy)
+  const foxyPresent = state.office.right.some(a => a.isFoxy);
+  if (foxyPresent) {
+    ui.warningRight.style.display = 'block';
+    ui.presenceRight.style.display = 'block';
+    ui.presenceRight.textContent = 'FOXY';
+    ui.presenceRight.style.color = '#e74c3c';
+    ui.foxyProgressBar.style.display = 'block';
+  } else {
+    ui.warningRight.style.display = 'none';
+    ui.presenceRight.style.display = 'none';
+    ui.foxyProgressBar.style.display = 'none';
+  }
+}
+
+// MECÁNICAS DE LINTERNA
+function startLight(side) {
+  if(state.gameOver || state.mask.isWearing) return;
+  state.lights[side] = true;
+  ui.flashlight.style.display = 'block';
+  
+  // Si es la derecha y Foxy está presente, aumentar progreso
+  if (side === 'right' && state.office.right.some(a => a.isFoxy)) {
+    lightTimer.right = Date.now();
+  }
+}
+
+function stopLight(side) {
+  state.lights[side] = false;
+  if (!state.lights.left && !state.lights.right) {
+    ui.flashlight.style.display = 'none';
+  }
+  
+  // Si es la derecha, verificar si ahuyentamos a Foxy
+  if (side === 'right') {
+    const lightDuration = Date.now() - lightTimer.right;
+    if (lightDuration >= 5000 && state.office.right.some(a => a.isFoxy)) {
+      // Ahuyentar a Foxy
+      state.office.right = state.office.right.filter(a => !a.isFoxy);
+      showMessage("¡Ahuyentaste a Foxy!", 2000);
+      ui.foxyProgressBar.style.display = 'none';
+      if (danger.foxy.timer) clearTimeout(danger.foxy.timer);
+    }
+  }
+}
+
+function toggleMask(){
+  if(state.gameOver) return;
+  
+  if(state.mask.isWearing){
+    state.mask.isWearing = false;
+    showMessage("Máscara quitada", 1500);
+    
+    if (state.gameMode === "multi") {
+      state.currentPlayer = state.currentPlayer === 1 ? 2 : 1;
+      ui.playerIndicator.textContent = `Jugador ${state.currentPlayer}`;
+      showMessage(`¡Turno del Jugador ${state.currentPlayer}!`, 2000);
+    }
+  } else {
+    // SIN COOLDOWN - siempre se puede poner la máscara
+    state.mask.isWearing = true;
+    showMessage("🎭 Máscara puesta", 1500);
+    
+    // Ahuyentar a los animatrónicos que le temen a la máscara
+    scareAnimatronicsWithMask();
+  }
+  updateView();
+  updateMaskUI();
+}
+
+// AHUYENTAR ANIMATRÓNICOS CON MÁSCARA
+function scareAnimatronicsWithMask() {
+  let scaredCount = 0;
+  
+  ['left', 'right'].forEach(side => {
+    const beforeCount = state.office[side].length;
+    state.office[side] = state.office[side].filter(anim => {
+      if (anim.scaredByMask) {
+        return false;
+      }
+      return true;
+    });
+    scaredCount += (beforeCount - state.office[side].length);
+  });
+  
+  if (scaredCount > 0) {
+    showMessage(`¡${scaredCount} animatrónicos se alejaron!`, 2000);
+  }
+  updateDoorWarnings();
+}
+
+function updateMaskUI(){
+  const m = state.mask;
+  if(m.isWearing){
+    ui.maskBtn.textContent = "Quitar Máscara";
+    ui.maskStatus.textContent = `Restante: ${((m.maxWearTime-m.totalWornTime)/1000).toFixed(1)}s`;
+    ui.maskWarning.style.display = m.totalWornTime > m.maxWearTime-4000 ? 'block' : 'none';
+    if(m.totalWornTime > m.maxWearTime-4000) {
+      ui.maskWarning.classList.add('warning');
+    } else {
+      ui.maskWarning.classList.remove('warning');
+    }
+  } else {
+    // SIN COOLDOWN - siempre disponible
+    ui.maskBtn.textContent = "Poner Máscara";
+    ui.maskBtn.disabled = false;
+    ui.maskStatus.textContent = "LISTA";
+  }
+}
+
+function updateView(){
+  ui.maskView.style.display = state.mask.isWearing ? 'flex' : 'none';
+
+  if(state.mask.isWearing){
+    ui.mainView.innerHTML = '<div style="color:#444;font-size:16px;">(Máscara puesta)</div>';
+    return;
+  }
+
+  let html = '<div style="color:#333;font-size:14px;">Oficina oscura...</div>';
+  const left = state.office.left[0];
+  const right = state.office.right[0];
+
+  if(left?.isGolden || right?.isGolden){
+    html = `<div class="monster">${GF.emoji}</div><div style="color:gold;font-size:24px;font-weight:bold;">¡MÁSCARA YA!</div>`;
+  }
+  else if(state.lights.left){
+    html = left ? `<div class="monster">${left.emoji}</div>` : '<div style="color:#666">Vacío</div>';
+  }
+  else if(state.lights.right){
+    html = right ? `<div class="monster">${right.emoji}</div>` : '<div style="color:#666">Vacío</div>';
+  }
+  ui.mainView.innerHTML = html;
+}
+
+// IA MEJORADA - TODOS ACTIVOS CON IA PROGRESIVA
+function moveAI(){
+  if(state.gameOver) return;
+  
+  // Golden Freddy - Aparece en noches altas
+  if(state.night >= 3 && Math.random() < 0.02){
+    const side = Math.random()<0.5 ? 'left' : 'right';
+    state.office[side].push(GF);
+    showMessage("¡Algo dorado acecha...!", 3000);
+    triggerGFAttack();
+  }
+
+  // Movimiento de animatrónicos - IA progresiva por noche
+  ACTIVE_ANIMS.forEach(a => {
+    // La IA mejora cada noche
+    const aiBoost = (state.night - 1) * 0.1;
+    const moveChance = (0.1 + aiBoost) * (a.aiLevel || 1);
+    
+    if(Math.random() < moveChance){
+      // Foxy siempre va a la puerta derecha
+      const side = a.isFoxy ? 'right' : (Math.random()<0.5 ? 'left' : 'right');
+      
+      if(state.office[side].length === 0 || (a.isFoxy && !state.office[side].some(anim => anim.isFoxy))){
+        state.office[side].push(a);
+        
+        if(a.isFoxy){
+          showMessage("¡Foxy está en la puerta!", 2500);
+          // Foxy ataca más rápido
+          danger.foxy.timer = setTimeout(()=>{
+            if(!state.lights.right) triggerJumpscare(a, "¡Foxy te atacó!");
+          }, 8000 - (state.night * 1000));
+        } else {
+          showMessage(`${a.emoji} está en la ${side==='left'?'ventilación':'puerta'}!`, 2500);
+          danger[side].anim = a;
+          const attackTime = 10000 - (state.night * 1200);
+          danger[side].timer = setTimeout(()=>{
+            triggerJumpscare(a, `${a.id} te atrapó`);
+          }, Math.max(4000, attackTime));
+        }
+      }
+    }
+  });
+
+  updateCamScreen();
+  updateView();
+  updateDoorWarnings();
+}
+
+function setCam(n){
+  state.currentCam = n;
+  document.querySelectorAll('.cam-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cam'+n).classList.add('active');
+  updateCamScreen();
+  
+  // Contener al Puppet automáticamente si estamos en su cámara
+  if (n === 7) {
+    containPuppet();
+  }
+}
+
+function updateCamScreen(){
+  const list = state.cams[state.currentCam];
+  ui.camScreen.textContent = list.length ? list.map(a=>a.emoji).join('  ') : '...';
+}
+
+function showMessage(txt, t=4000){
+  ui.messageBar.textContent = txt;
+  setTimeout(()=>ui.messageBar.textContent='', t);
+}
+
+function clearDanger(s){ 
+  if(danger[s].timer) clearTimeout(danger[s].timer); 
+  danger[s]={anim:null,timer:null}; 
+  state.office[s]=[]; 
+  updateDoorWarnings();
+}
+
+function clearGFDanger(){ 
+  if(danger.gf.timer) clearTimeout(danger.gf.timer); 
+  danger.gf.timer=null; 
+  state.office.left=state.office.left.filter(a=>!a.isGolden); 
+  state.office.right=state.office.right.filter(a=>!a.isGolden); 
+  updateDoorWarnings();
+}
+
+function GFisPresent(){ 
+  return state.office.left.some(a=>a.isGolden) || state.office.right.some(a=>a.isGolden); 
+}
+
+function triggerGFAttack(){ 
+  if(danger.gf.timer) return; 
+  danger.gf.timer=setTimeout(()=>{ 
+    if(!state.mask.isWearing) triggerJumpscare(GF,"¡Golden Freddy!"); 
+  }, GF.attackTime); 
+}
+
+function gameLoop(){
+  if(state.gameOver) return;
+  const now = Date.now();
+  const elapsed = (now - state.startTime) / 1000;
+  const nightDuration = 300 + state.night*60;
+  const progress = elapsed / nightDuration;
+
+  // Reloj
+  const h = Math.min(5, Math.floor(progress * 6));
+  const m = Math.floor((progress * 6 - h) * 60);
+  ui.clock.textContent = `${h||12}:${m.toString().padStart(2,'0')} AM`;
+
+  // Barra de progreso de la noche
+  ui.nightFill.style.width = `${Math.min(100, progress * 100)}%`;
+
+  if(progress >= 1){ winNight(); return; }
+
+  // Energía - Consumo por linternas
+  let drain = 0.015;
+  if(state.lights.left || state.lights.right) drain += 0.04;
+  state.power = Math.max(0, state.power - drain * state.night * 0.15);
+  ui.powerPct.textContent = Math.floor(state.power)+'%';
+  ui.powerFill.style.width = state.power+'%';
+  
+  // Cambio de color cuando la energía es baja
+  if(state.power <= 20) {
+    ui.powerFill.style.background = 'linear-gradient(to right,#e74c3c,#c0392b)';
+    if(state.power <= 10) {
+      ui.powerPct.classList.add('warning');
+    } else {
+      ui.powerPct.classList.remove('warning');
+    }
+  } else {
+    ui.powerFill.style.background = 'linear-gradient(to right,#2ecc71,#27ae60)';
+    ui.powerPct.classList.remove('warning');
+  }
+  
+  if(state.power <= 0){ triggerJumpscare(null,"¡Sin energía!"); return; }
+
+  // Progreso de Foxy cuando está en la puerta
+  if (state.office.right.some(a => a.isFoxy) && state.lights.right) {
+    const lightDuration = Date.now() - lightTimer.right;
+    state.foxyProgress = Math.min(100, (lightDuration / 5000) * 100);
+    ui.foxyFill.style.width = state.foxyProgress + '%';
+    
+    if (state.foxyProgress >= 100) {
+      state.office.right = state.office.right.filter(a => !a.isFoxy);
+      showMessage("¡Ahuyentaste a Foxy!", 2000);
+      ui.foxyProgressBar.style.display = 'none';
+      if (danger.foxy.timer) clearTimeout(danger.foxy.timer);
+    }
+  }
+
+  // Máscara - SIN COOLDOWN, solo tiempo máximo de uso
+  if(state.mask.isWearing){
+    state.mask.totalWornTime += 100;
+    if(state.mask.totalWornTime >= state.mask.maxWearTime){
+      triggerJumpscare(null,"¡Máscara sobrecalentada!");
+      return;
+    }
+  }
+
+  updateMaskUI();
+}
+
+function triggerJumpscare(anim, reason){
+  if(state.gameOver) return;
+  state.gameOver = true;
+  ui.jumpscareFace.textContent = anim?.emoji || '💀';
+  ui.jumpscareReason.textContent = reason || "GAME OVER";
+  ui.jumpscare.classList.add('active');
+  setTimeout(() => {
+    ui.jumpscare.classList.remove('active');
+    showMenu();
+  }, 4000);
+}
+
+function winNight(){
+  state.gameOver = true;
+  const next = state.night >= 5 ? 1 : state.night + 1;
+  state.night = next;
+  saveGame();
+  ui.jumpscareFace.textContent = '🏆';
+  ui.jumpscareReason.textContent = `¡Noche ${state.night-1} completada!\n¡Noche ${next} desbloqueada!`;
+  ui.jumpscare.classList.add('active');
+  setTimeout(() => {
+    ui.jumpscare.classList.remove('active');
+    showMenu();
+  }, 6000);
+}
+
+// INICIALIZACIÓN DE LA APLICACIÓN
+document.getElementById('btn-single').onclick = () => startGame("single");
+document.getElementById('btn-multi').onclick = () => startGame("multi");
+document.getElementById('btn-continue').onclick = () => startGame("single", true);
+document.getElementById('btn-reset').onclick = () => {
+  resetGame();
+  showMenu();
+};
+
+// Cargar partida al iniciar
+loadGame();
+showMenu();
+</script>
+</body>
+</html>

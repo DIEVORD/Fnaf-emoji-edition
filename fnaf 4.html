@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>FNAF 4: Nightmare Edition</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{--bg:#020317;--accent:#2ecc71;--danger:#e74c3c;--warning:#f1c40f;}
+  body{margin:0;font-family:system-ui,sans-serif;background:linear-gradient(180deg,#020317,#071229);color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;}
+  .card{width:960px;max-width:98vw;background:linear-gradient(180deg,#081227,#071525);border-radius:16px;padding:15px;box-shadow:0 20px 60px rgba(0,0,0,0.9);border:1px solid #1c2533;}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  h1{font-size:20px;margin:0;}
+  .layout{display:flex;gap:15px;flex-wrap:wrap;}
+  .view{flex:2;background:#000;border-radius:12px;padding:12px;min-height:340px;position:relative;border:2px solid #222;}
+  .hud{flex:1;min-width:300px;background:#071522;border-radius:12px;padding:15px;border:1px solid #1c2533;display:flex;flex-direction:column;gap:12px;}
+  
+  /* Habitación - Diseño FNAF 4 */
+  .bedroom{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:10px;height:260px;background:#050505;border-radius:10px;overflow:hidden;border:1px solid #333;padding:10px;}
+  .location{background:#0a0a0a;border-radius:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer;transition:all 0.3s;border:2px solid #1a1a1a;}
+  .location:hover{background:#111;border-color:#333;}
+  .location.active{background:#1a1a2a;border-color:#4a69bd;}
+  .location-emoji{font-size:40px;margin-bottom:5px;}
+  .location-name{font-size:10px;color:#aaa;text-align:center;}
+  
+  .monster{font-size:80px;filter:drop-shadow(0 0 20px red);animation:shake 0.35s infinite;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(5px)}75%{transform:translateX(-5px)}}
+  
+  .control-row{display:flex;justify-content:space-between;align-items:center;background:#0b1220;padding:12px;border-radius:8px;border:1px solid #1c2533;}
+  .btn-group{display:flex;gap:10px;}
+  .action-btn{padding:11px 18px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;transition:0.2s;}
+  .btn-light{background:#f1c40f;color:#000;}
+  .btn-door{background:#e74c3c;color:#fff;}
+  .btn-door.active{background:#27ae60;}
+  
+  #jumpscare{position:fixed;inset:0;background:#fff;z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;color:#000;font-size:180px;}
+  #jumpscare.active{display:flex;animation:jumpscare 0.9s;}
+  @keyframes jumpscare{0%{transform:scale(0)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
+  #message-bar{height:28px;text-align:center;color:var(--warning);font-weight:bold;font-size:16px;margin-bottom:8px;}
+  .night-progress{height:6px;background:#111;border-radius:3px;overflow:hidden;margin-top:5px;}
+  #night-fill{height:100%;background:linear-gradient(to right,#3498db,#9b59b6);width:0%;transition:width 0.5s;}
+  .warning{animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+  
+  /* Menú */
+  #menu{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;}
+  .menu-title{font-size:40px;color:#fff;margin-bottom:30px;text-align:center;}
+  .menu-btn{background:var(--accent);color:#000;border:none;padding:15px 30px;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;transition:0.3s;min-width:200px;text-align:center;}
+  .menu-btn:hover{transform:scale(1.05);background:#27ae60;}
+  .menu-btn.secondary{background:#3498db;}
+  .menu-btn.secondary:hover{background:#2980b9;}
+  .menu-btn.danger{background:#e74c3c;}
+  .menu-btn.danger:hover{background:#c0392b;}
+  
+  /* Avisos de Nightmare */
+  .nightmare-warning{position:absolute;top:2px;left:0;right:0;text-align:center;font-size:9px;color:#e74c3c;font-weight:bold;animation:glow 1s infinite;}
+  @keyframes glow{0%,100%{opacity:1}50%{opacity:0.5}}
+  
+  /* Efecto de linterna */
+  .flashlight{position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at var(--flashlight-x, 50%) var(--flashlight-y, 50%), transparent 80px, rgba(0,0,0,0.95) 160px);pointer-events:none;z-index:5;display:none;}
+  
+  /* Estadísticas */
+  .stats{position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.7);padding:5px 10px;border-radius:5px;font-size:11px;border:1px solid #333;}
+  
+  /* Indicador de dificultad */
+  .difficulty{position:absolute;top:10px;right:10px;background:rgba(0,0,0,0.7);padding:5px 10px;border-radius:5px;font-size:11px;border:1px solid #333;}
+
+
+/* RESPONSIVE DESIGN - FNAF 4 - CORREGIDO */
+@media (max-width: 1024px) {
+  .card { 
+    width: 98vw; 
+    padding: 12px;
+    margin: 10px;
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+  body {
+    height: auto;
+    min-height: 100vh;
+    padding: 10px 0;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout { 
+    flex-direction: column; 
+    gap: 10px;
+  }
+  .view, .hud { 
+    width: 100%;
+    min-height: auto;
+  }
+  .bedroom { 
+    height: 200px; 
+    min-height: 200px;
+    grid-template-columns: 1fr 1fr; 
+    grid-template-rows: 1fr 1fr; 
+  }
+  .location-emoji { font-size: 35px; }
+  .monster { font-size: 55px; }
+  .action-btn { 
+    padding: 10px 14px; 
+    font-size: 13px; 
+  }
+  .top { 
+    flex-direction: column; 
+    gap: 8px; 
+    text-align: center; 
+    margin-bottom: 15px;
+  }
+  h1 { font-size: 18px; }
+  #message-bar {
+    margin-bottom: 12px;
+    height: 32px;
+    font-size: 14px;
+  }
+  #location-view { 
+    font-size: 14px; 
+    min-height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .card { 
+    padding: 8px;
+    margin: 5px;
+  }
+  .bedroom { 
+    height: 170px; 
+    min-height: 170px;
+    gap: 8px; 
+    padding: 8px; 
+  }
+  .location-emoji { font-size: 28px; }
+  .monster { font-size: 40px; }
+  .location-name { font-size: 9px; }
+  .control-row { 
+    padding: 10px; 
+    font-size: 13px; 
+  }
+  .action-btn { 
+    padding: 8px 12px; 
+    font-size: 12px; 
+    min-width: 80px;
+  }
+  .stats, .difficulty { 
+    font-size: 10px; 
+    padding: 4px 8px; 
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <div class="menu-title">FNAF 4: Nightmare Edition</div>
+  <button class="menu-btn" id="btn-single">Un Jugador</button>
+  <button class="menu-btn" id="btn-continue">Continuar Noche</button>
+  <button class="menu-btn danger" id="btn-reset">Reiniciar Progreso</button>
+</div>
+
+<div class="card" style="display:none;">
+  <div class="top">
+    <h1>FNAF 4: Nightmare Edition - IA BALANCEADA</h1>
+    <div>Noche <span id="night-num">1</span> | <span id="clock">12:00 AM</span> | <span id="breath-counter">Respiración: Normal</span></div>
+  </div>
+  <div id="message-bar">¡Revisa las ubicaciones! IA más justa implementada</div>
+
+  <div class="layout">
+    <div class="view">
+      <div class="stats" id="game-stats">Nightmares: 0</div>
+      <div class="difficulty" id="difficulty-indicator">Dificultad: Baja</div>
+      <div id="flashlight" class="flashlight"></div>
+      <div class="bedroom">
+        <!-- Puerta Izquierda -->
+        <div class="location" id="location-left-door" onclick="checkLocation('left-door')">
+          <div class="location-emoji">🚪</div>
+          <div class="location-name">PUERTA IZQ</div>
+          <div id="warning-left-door" class="nightmare-warning" style="display:none;">¡PELIGRO!</div>
+        </div>
+        
+        <!-- Cama Derecha -->
+        <div class="location" id="location-right-bed" onclick="checkLocation('right-bed')">
+          <div class="location-emoji">🛏️</div>
+          <div class="location-name">CAMA DER</div>
+          <div id="warning-right-bed" class="nightmare-warning" style="display:none;">¡PELIGRO!</div>
+        </div>
+        
+        <!-- Armario -->
+        <div class="location" id="location-closet" onclick="checkLocation('closet')">
+          <div class="location-emoji">🚪</div>
+          <div class="location-name">ARMARIO</div>
+          <div id="warning-closet" class="nightmare-warning" style="display:none;">¡PELIGRO!</div>
+        </div>
+        
+        <!-- Cama Izquierda -->
+        <div class="location" id="location-left-bed" onclick="checkLocation('left-bed')">
+          <div class="location-emoji">🛏️</div>
+          <div class="location-name">CAMA IZQ</div>
+          <div id="warning-left-bed" class="nightmare-warning" style="display:none;">¡PELIGRO!</div>
+        </div>
+      </div>
+      <div class="night-progress"><div id="night-fill"></div></div>
+    </div>
+
+    <aside class="hud">
+      <div style="font-size:14px;color:#aaa;">Habitación - IA Balanceada</div>
+      <div style="background:#000;border:1px solid #333;border-radius:8px;padding:15px;text-align:center;min-height:80px;display:flex;align-items:center;justify-content:center;">
+        <div id="location-view" style="color:#666;font-size:14px;">Haz click en una ubicación para revisar</div>
+      </div>
+
+      <div class="control-row">
+        <span>PUERTA IZQUIERDA</span>
+        <button class="action-btn btn-door" id="btn-door-left">Cerrar Puerta</button>
+      </div>
+
+      <div class="control-row">
+        <span>ARMARIO</span>
+        <button class="action-btn btn-door" id="btn-door-closet">Cerrar Armario</button>
+      </div>
+      
+      <div style="font-size:11px;color:#777;text-align:center;">
+        🔦 Revisa las ubicaciones cada 20 segundos<br>
+        🚪 Cierra puertas cuando haya Nightmares<br>
+        ⏱️ Tienes 10 segundos para reaccionar<br>
+        💀 Máximo 3 Nightmares activos
+      </div>
+      
+      <button class="action-btn" id="btn-menu" style="background:#7f8c8d;margin-top:10px;">Volver al Menú</button>
+    </aside>
+  </div>
+</div>
+
+<div id="jumpscare">
+  <div id="jumpscare-face">💀</div>
+  <div id="jumpscare-reason" style="font-size:40px;margin-top:30px;">GAME OVER</div>
+</div>
+
+<script>
+// NIGHTMARE ANIMATRÓNICOS - IA BALANCEADA
+const NIGHTMARES = [
+  {id:"Nightmare Freddy", emoji:"🧸😈", type:"nightmare", locations: ["left-door", "right-bed"], attackTime: 12000, sound: "heavy_steps", aggression: 1},
+  {id:"Nightmare Bonnie", emoji:"🐰😈", type:"nightmare", locations: ["left-door", "left-bed"], attackTime: 11000, sound: "rustling", aggression: 1},
+  {id:"Nightmare Chica", emoji:"🐤😈", type:"nightmare", locations: ["right-bed", "closet"], attackTime: 13000, sound: "clattering", aggression: 1},
+  {id:"Nightmare Foxy", emoji:"🦊😈", type:"nightmare", locations: ["closet", "left-bed"], attackTime: 10000, sound: "giggling", aggression: 2},
+  {id:"Nightmare Fredbear", emoji:"🐻😈", type:"nightmare", locations: ["left-door", "right-bed", "closet", "left-bed"], attackTime: 15000, sound: "laughing", aggression: 3},
+  {id:"Nightmare", emoji:"🌙😈", type:"nightmare", locations: ["left-door", "right-bed", "closet", "left-bed"], attackTime: 18000, sound: "whispering", aggression: 3}
+];
+
+// ESTADO
+let state = {
+  night: 1,
+  startTime: 0,
+  currentLocation: null,
+  doors: {left: false, closet: false},
+  gameOver: false,
+  nightmares: [],
+  activeLocation: null,
+  breathState: "normal",
+  gameMode: "single",
+  flashlightActive: false,
+  lastSpawnTime: 0,
+  gracePeriod: true // Periodo de gracia al inicio
+};
+
+let gameInterval, aiInterval, breathInterval;
+let attackTimers = {};
+let locationCheckTime = {};
+let graceTimer = null;
+
+// UI
+const ui = {
+  menu: document.getElementById('menu'),
+  game: document.querySelector('.card'),
+  nightNum: document.getElementById('night-num'),
+  clock: document.getElementById('clock'),
+  breathCounter: document.getElementById('breath-counter'),
+  messageBar: document.getElementById('message-bar'),
+  locationView: document.getElementById('location-view'),
+  nightFill: document.getElementById('night-fill'),
+  jumpscare: document.getElementById('jumpscare'),
+  jumpscareFace: document.getElementById('jumpscare-face'),
+  jumpscareReason: document.getElementById('jumpscare-reason'),
+  btnMenu: document.getElementById('btn-menu'),
+  flashlight: document.getElementById('flashlight'),
+  gameStats: document.getElementById('game-stats'),
+  difficultyIndicator: document.getElementById('difficulty-indicator')
+};
+
+// SISTEMA DE GUARDADO
+function saveGame() {
+  const saveData = {
+    night: state.night,
+    mode: state.gameMode
+  };
+  localStorage.setItem('fnaf4_save', JSON.stringify(saveData));
+}
+
+function loadGame() {
+  const saveData = localStorage.getItem('fnaf4_save');
+  if (saveData) {
+    const data = JSON.parse(saveData);
+    state.night = data.night || 1;
+    state.gameMode = data.mode || "single";
+    return true;
+  }
+  return false;
+}
+
+function resetGame() {
+  localStorage.removeItem('fnaf4_save');
+  state.night = 1;
+  state.gameMode = "single";
+}
+
+// MENÚ PRINCIPAL
+function showMenu() {
+  clearIntervals();
+  ui.menu.style.display = 'flex';
+  ui.game.style.display = 'none';
+  
+  document.getElementById('btn-continue').disabled = !loadGame();
+}
+
+function startGame(mode, continueGame = false) {
+  if (!continueGame) {
+    state.night = mode === "multi" ? 1 : state.night;
+    state.gameMode = mode;
+  }
+  
+  ui.menu.style.display = 'none';
+  ui.game.style.display = 'block';
+  
+  initGame();
+}
+
+function clearIntervals() {
+  if (gameInterval) clearInterval(gameInterval);
+  if (aiInterval) clearInterval(aiInterval);
+  if (breathInterval) clearInterval(breathInterval);
+  if (graceTimer) clearTimeout(graceTimer);
+  Object.values(attackTimers).forEach(timer => clearTimeout(timer));
+}
+
+// INICIALIZACIÓN DEL JUEGO
+function initGame() {
+  state.startTime = Date.now();
+  state.currentLocation = null;
+  state.doors = {left: false, closet: false};
+  state.gameOver = false;
+  state.nightmares = [];
+  state.activeLocation = null;
+  state.breathState = "normal";
+  state.flashlightActive = false;
+  state.lastSpawnTime = 0;
+  state.gracePeriod = true;
+
+  // Limpiar todos los timers
+  attackTimers = {};
+  locationCheckTime = {};
+
+  // Actualizar UI
+  ui.nightNum.textContent = state.night;
+  ui.breathCounter.textContent = "Respiración: Normal";
+  ui.breathCounter.style.color = "#2ecc71";
+  ui.locationView.textContent = "Haz click en una ubicación para revisar";
+  ui.flashlight.style.display = 'none';
+  updateDifficultyIndicator();
+  
+  // Ocultar todas las advertencias
+  document.querySelectorAll('.nightmare-warning').forEach(warning => {
+    warning.style.display = 'none';
+  });
+  
+  // Configurar controles
+  document.getElementById('btn-door-left').onclick = () => toggleDoor('left');
+  document.getElementById('btn-door-closet').onclick = () => toggleDoor('closet');
+  ui.btnMenu.onclick = showMenu;
+
+  // PERIODO DE GRACIA - 30 segundos al inicio
+  showMessage("⚡ PERIODO DE GRACIA: 30 segundos sin ataques", 5000);
+  graceTimer = setTimeout(() => {
+    state.gracePeriod = false;
+    showMessage("¡Periodo de gracia terminado! ¡Cuidado con los Nightmares!", 3000);
+  }, 30000);
+
+  // Iniciar con 1-2 Nightmares según la noche
+  const startingNightmares = Math.min(state.night, 2);
+  for (let i = 0; i < startingNightmares; i++) {
+    setTimeout(() => spawnNightmare(), 5000 + (i * 8000));
+  }
+
+  // Iniciar bucles del juego
+  clearIntervals();
+  gameInterval = setInterval(gameLoop, 100);
+  aiInterval = setInterval(moveNightmares, Math.max(12000, 20000 - (state.night*800))); // MOVIMIENTO MÁS LENTO
+  breathInterval = setInterval(updateBreathing, 2000);
+  
+  // Configurar efecto de linterna al mover mouse
+  document.addEventListener('mousemove', (e) => {
+    if (state.flashlightActive) {
+      const rect = ui.flashlight.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      ui.flashlight.style.setProperty('--flashlight-x', `${x}%`);
+      ui.flashlight.style.setProperty('--flashlight-y', `${y}%`);
+    }
+  });
+  
+  saveGame();
+}
+
+function updateDifficultyIndicator() {
+  const difficultyLevels = [
+    {night: 1, text: "Muy Fácil", color: "#2ecc71"},
+    {night: 2, text: "Fácil", color: "#27ae60"},
+    {night: 3, text: "Normal", color: "#f1c40f"},
+    {night: 4, text: "Difícil", color: "#e67e22"},
+    {night: 5, text: "Nightmare", color: "#e74c3c"}
+  ];
+  
+  const difficulty = difficultyLevels.find(d => d.night === state.night) || difficultyLevels[4];
+  ui.difficultyIndicator.textContent = `Dificultad: ${difficulty.text}`;
+  ui.difficultyIndicator.style.color = difficulty.color;
+}
+
+// ACTUALIZAR RESPIRACIÓN
+function updateBreathing() {
+  if (state.gameOver) return;
+  
+  const activeDangers = state.nightmares.filter(n => 
+    !((n.location === 'left-door' && state.doors.left) || 
+      (n.location === 'closet' && state.doors.closet))
+  ).length;
+  
+  if (activeDangers >= 3) {
+    state.breathState = "panicked";
+    ui.breathCounter.textContent = "Respiración: ¡PÁNICO!";
+    ui.breathCounter.style.color = "#e74c3c";
+  } else if (activeDangers >= 2) {
+    state.breathState = "heavy";
+    ui.breathCounter.textContent = "Respiración: Pesada";
+    ui.breathCounter.style.color = "#f1c40f";
+  } else if (activeDangers >= 1) {
+    state.breathState = "quick";
+    ui.breathCounter.textContent = "Respiración: Rápida";
+    ui.breathCounter.style.color = "#f39c12";
+  } else {
+    state.breathState = "normal";
+    ui.breathCounter.textContent = "Respiración: Normal";
+    ui.breathCounter.style.color = "#2ecc71";
+  }
+}
+
+// REVISAR UBICACIÓN
+function checkLocation(location) {
+  if (state.gameOver) return;
+  
+  state.activeLocation = location;
+  state.flashlightActive = true;
+  ui.flashlight.style.display = 'block';
+  
+  // Registrar tiempo de revisión
+  locationCheckTime[location] = Date.now();
+  
+  // Buscar si hay Nightmare en esta ubicación
+  const nightmareHere = state.nightmares.find(n => n.location === location);
+  
+  if (nightmareHere) {
+    ui.locationView.innerHTML = `<div class="monster">${nightmareHere.emoji}</div><div style="color:#e74c3c;font-size:12px;margin-top:10px;">¡${nightmareHere.id} está aquí!</div>`;
+    showMessage(`¡${nightmareHere.id} detectado en ${getLocationName(location)}!`, 2000);
+    
+    // Si hay un nightmare, iniciar timer de ataque si no está bloqueado
+    if (!isLocationBlocked(location) && !state.gracePeriod) {
+      startNightmareAttack(nightmareHere);
+    }
+  } else {
+    ui.locationView.innerHTML = `<div style="color:#2ecc71;font-size:14px;">${getLocationName(location)} vacía</div><div style="color:#666;font-size:10px;margin-top:5px;">Seguro por ahora...</div>`;
+  }
+  
+  // Ocultar linterna después de 2 segundos
+  setTimeout(() => {
+    if (state.activeLocation === location) {
+      state.flashlightActive = false;
+      ui.flashlight.style.display = 'none';
+      state.activeLocation = null;
+      ui.locationView.textContent = "Haz click en una ubicación para revisar";
+    }
+  }, 2000);
+}
+
+function getLocationName(location) {
+  const names = {
+    'left-door': 'Puerta Izquierda',
+    'right-bed': 'Cama Derecha', 
+    'closet': 'Armario',
+    'left-bed': 'Cama Izquierda'
+  };
+  return names[location] || location;
+}
+
+function isLocationBlocked(location) {
+  return (location === 'left-door' && state.doors.left) || 
+         (location === 'closet' && state.doors.closet);
+}
+
+// MECÁNICAS DE PUERTAS
+function toggleDoor(door) {
+  if (state.gameOver) return;
+  
+  state.doors[door] = !state.doors[door];
+  const btn = document.getElementById(`btn-door-${door}`);
+  
+  if (state.doors[door]) {
+    btn.textContent = "Puerta Abierta";
+    btn.style.background = "#27ae60";
+    showMessage(`${door === 'left' ? 'Puerta izquierda' : 'Armario'} CERRADO`, 1500);
+    
+    // Si había un nightmare bloqueado, eliminarlo
+    const blockedNightmare = state.nightmares.find(n => 
+      n.location === (door === 'left' ? 'left-door' : 'closet')
+    );
+    if (blockedNightmare) {
+      removeNightmare(blockedNightmare);
+      showMessage(`¡${blockedNightmare.id} ahuyentado!`, 2000);
+    }
+  } else {
+    btn.textContent = door === 'left' ? "Cerrar Puerta" : "Cerrar Armario";
+    btn.style.background = "#e74c3c";
+    showMessage(`${door === 'left' ? 'Puerta izquierda' : 'Armario'} ABIERTO`, 1500);
+  }
+}
+
+// SPAWN DE NIGHTMARES - IA BALANCEADA
+function spawnNightmare() {
+  if (state.gameOver || state.nightmares.length >= 3) return; // MÁXIMO 3 NIGHTMARES
+  
+  const now = Date.now();
+  if (now - state.lastSpawnTime < 15000) return; // COOLDOWN ENTRE SPAWNS
+  
+  const availableNightmares = NIGHTMARES.filter(nightmare => 
+    !state.nightmares.some(n => n.id === nightmare.id) &&
+    nightmare.aggression <= Math.min(3, state.night) // NIGHTMARES MÁS DIFÍCILES SOLO EN NOCHES ALTAS
+  );
+  
+  if (availableNightmares.length === 0) return;
+  
+  const nightmare = availableNightmares[Math.floor(Math.random() * availableNightmares.length)];
+  const availableLocations = nightmare.locations.filter(location => 
+    !state.nightmares.some(n => n.location === location) && !isLocationBlocked(location)
+  );
+  
+  if (availableLocations.length === 0) return;
+  
+  const location = availableLocations[Math.floor(Math.random() * availableLocations.length)];
+  const newNightmare = {...nightmare, location};
+  
+  state.nightmares.push(newNightmare);
+  state.lastSpawnTime = now;
+  updateLocationWarnings();
+  showMessage(`🔊 Sonidos de ${nightmare.sound}... ${nightmare.id} se acerca`, 3000);
+  
+  ui.gameStats.textContent = `Nightmares: ${state.nightmares.length}`;
+}
+
+// MOVIMIENTO DE NIGHTMARES - IA BALANCEADA
+function moveNightmares() {
+  if (state.gameOver || state.gracePeriod) return;
+  
+  // MOVIMIENTO MÁS ESPORÁDICO Y PREDECIBLE
+  state.nightmares.forEach(nightmare => {
+    if (Math.random() < 0.3 + (state.night * 0.08)) { // MOVIMIENTO MÁS RARO
+      const availableLocations = nightmare.locations.filter(location => 
+        location !== nightmare.location && 
+        !state.nightmares.some(n => n.location === location) &&
+        !isLocationBlocked(location)
+      );
+      
+      if (availableLocations.length > 0) {
+        const oldLocation = nightmare.location;
+        nightmare.location = availableLocations[Math.floor(Math.random() * availableLocations.length)];
+        showMessage(`${nightmare.id} se movió a ${getLocationName(nightmare.location)}`, 2500);
+        updateLocationWarnings();
+        
+        // Cancelar ataque anterior si se movió
+        if (attackTimers[nightmare.id]) {
+          clearTimeout(attackTimers[nightmare.id]);
+          delete attackTimers[nightmare.id];
+        }
+      }
+    }
+  });
+  
+  // SPAWN MÁS CONTROLADO
+  const spawnChance = 0.2 + (state.night * 0.1);
+  if (Math.random() < spawnChance && state.nightmares.length < 3) {
+    setTimeout(() => spawnNightmare(), 3000);
+  }
+}
+
+function updateLocationWarnings() {
+  // Ocultar todas las advertencias primero
+  document.querySelectorAll('.nightmare-warning').forEach(warning => {
+    warning.style.display = 'none';
+  });
+  
+  // Mostrar advertencias donde hay nightmares
+  state.nightmares.forEach(nightmare => {
+    const warningElement = document.getElementById(`warning-${nightmare.location}`);
+    if (warningElement) {
+      warningElement.style.display = 'block';
+      warningElement.textContent = `¡${nightmare.id.split(' ')[1]}!`;
+    }
+  });
+}
+
+function startNightmareAttack(nightmare) {
+  if (attackTimers[nightmare.id] || state.gracePeriod) return;
+  
+  const adjustedAttackTime = nightmare.attackTime - (state.night * 800);
+  const minAttackTime = 8000; // MÍNIMO 8 SEGUNDOS PARA REACCIONAR
+  
+  attackTimers[nightmare.id] = setTimeout(() => {
+    if (!state.gameOver && state.nightmares.some(n => n.id === nightmare.id)) {
+      triggerJumpscare(nightmare, `¡${nightmare.id} te atrapó!`);
+    }
+  }, Math.max(minAttackTime, adjustedAttackTime));
+}
+
+function removeNightmare(nightmare) {
+  state.nightmares = state.nightmares.filter(n => n.id !== nightmare.id);
+  if (attackTimers[nightmare.id]) {
+    clearTimeout(attackTimers[nightmare.id]);
+    delete attackTimers[nightmare.id];
+  }
+  updateLocationWarnings();
+  ui.gameStats.textContent = `Nightmares: ${state.nightmares.length}`;
+}
+
+function showMessage(txt, t=4000){
+  ui.messageBar.textContent = txt;
+  setTimeout(()=>ui.messageBar.textContent='', t);
+}
+
+function gameLoop(){
+  if(state.gameOver) return;
+  const now = Date.now();
+  const elapsed = (now - state.startTime) / 1000;
+  const nightDuration = 300 + state.night*60;
+  const progress = elapsed / nightDuration;
+
+  // Reloj
+  const h = Math.min(5, Math.floor(progress * 6));
+  const m = Math.floor((progress * 6 - h) * 60);
+  ui.clock.textContent = `${h||12}:${m.toString().padStart(2,'0')} AM`;
+
+  // Barra de progreso de la noche
+  ui.nightFill.style.width = `${Math.min(100, progress * 100)}%`;
+
+  if(progress >= 1){ winNight(); return; }
+
+  // Verificar ubicaciones no revisadas recientemente - MÁS TIEMPO PARA REACCIONAR
+  const locations = ['left-door', 'right-bed', 'closet', 'left-bed'];
+  locations.forEach(location => {
+    const lastCheck = locationCheckTime[location] || 0;
+    if (now - lastCheck > 20000 && !state.gracePeriod) { // 20 SEGUNDOS SIN REVISAR
+      const nightmareHere = state.nightmares.find(n => n.location === location);
+      if (nightmareHere && !isLocationBlocked(location) && Math.random() < 0.2) {
+        triggerJumpscare(nightmareHere, `¡No revisaste ${getLocationName(location)} a tiempo!`);
+      }
+    }
+  });
+}
+
+function triggerJumpscare(anim, reason){
+  if(state.gameOver) return;
+  state.gameOver = true;
+  ui.jumpscareFace.textContent = anim?.emoji || '💀';
+  ui.jumpscareReason.textContent = reason || "GAME OVER";
+  ui.jumpscare.classList.add('active');
+  setTimeout(() => {
+    ui.jumpscare.classList.remove('active');
+    showMenu();
+  }, 4000);
+}
+
+function winNight(){
+  state.gameOver = true;
+  const next = state.night >= 5 ? 1 : state.night + 1;
+  state.night = next;
+  saveGame();
+  ui.jumpscareFace.textContent = '🏆';
+  ui.jumpscareReason.textContent = `¡Noche ${state.night-1} completada!\n¡Noche ${next} desbloqueada!`;
+  ui.jumpscare.classList.add('active');
+  setTimeout(() => {
+    ui.jumpscare.classList.remove('active');
+    showMenu();
+  }, 6000);
+}
+
+// INICIALIZACIÓN DE LA APLICACIÓN
+document.getElementById('btn-single').onclick = () => startGame("single");
+document.getElementById('btn-continue').onclick = () => startGame("single", true);
+document.getElementById('btn-reset').onclick = () => {
+  resetGame();
+  showMenu();
+};
+
+// Cargar partida al iniciar
+loadGame();
+showMenu();
+</script>
+</body>
+</html>

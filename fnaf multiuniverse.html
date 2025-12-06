@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>FNAF: Crisis Temporal</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{--bg:#020317;--accent:#2ecc71;--danger:#e74c3c;--warning:#f1c40f;--timeline:#9b59b6;}
+  body{margin:0;font-family:system-ui,sans-serif;background:linear-gradient(180deg,#020317,#071229);color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;}
+  .card{width:960px;max-width:98vw;background:linear-gradient(180deg,#081227,#071525);border-radius:16px;padding:15px;box-shadow:0 20px 60px rgba(0,0,0,0.9);border:1px solid #1c2533;}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  h1{font-size:20px;margin:0;}
+  .layout{display:flex;gap:15px;flex-wrap:wrap;}
+  .view{flex:2;background:#000;border-radius:12px;padding:12px;min-height:340px;position:relative;border:2px solid #222;}
+  .hud{flex:1;min-width:300px;background:#071522;border-radius:12px;padding:15px;border:1px solid #1c2533;display:flex;flex-direction:column;gap:12px;}
+  
+  /* Oficina mejorada */
+  .office{display:flex;height:260px;background:#050505;border-radius:10px;overflow:hidden;border:1px solid #333;position:relative;}
+  .door{width:90px;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+  .door-emoji{font-size:56px;}
+  .center-view{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;position:relative;}
+  .monster{font-size:80px;filter:drop-shadow(0 0 20px red);animation:shake 0.35s infinite;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(5px)}75%{transform:translateX(-5px)}}
+  
+  /* Aliados */
+  .ally{font-size:60px;filter:drop-shadow(0 0 15px #2ecc71);animation:glow 2s infinite;}
+  @keyframes glow{0%,100%{filter:drop-shadow(0 0 15px #2ecc71)}50%{filter:drop-shadow(0 0 25px #2ecc71)}}
+  
+  .cams{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+  .cam-btn{background:#0f1724;border:1px solid #333;color:#aaa;padding:11px;border-radius:6px;cursor:pointer;font-size:13px;transition:0.2s;}
+  .cam-btn:hover{background:#1a2338;}
+  .cam-btn.active{background:var(--accent);color:#000;font-weight:bold;}
+  #camScreen{height:100px;background:#000;border:1px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--accent);text-shadow:0 0 10px var(--accent);}
+  .control-row{display:flex;justify-content:space-between;align-items:center;background:#0b1220;padding:12px;border-radius:8px;border:1px solid #1c2533;}
+  .btn-group{display:flex;gap:10px;}
+  .action-btn{padding:11px 18px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;transition:0.2s;}
+  .btn-light{background:#f1c40f;color:#000;}
+  .btn-door{background:#e74c3c;color:#fff;}
+  .btn-door.active{background:#27ae60;}
+  .btn-mask{background:#4a69bd;color:#fff;}
+  .btn-mask:disabled{background:#1e3799;color:#888;cursor:not-allowed;}
+  .btn-ally{background:#9b59b6;color:#fff;}
+  
+  #jumpscare{position:fixed;inset:0;background:#fff;z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;color:#000;font-size:180px;}
+  #jumpscare.active{display:flex;animation:jumpscare 0.9s;}
+  @keyframes jumpscare{0%{transform:scale(0)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
+  #message-bar{height:28px;text-align:center;color:var(--warning);font-weight:bold;font-size:16px;margin-bottom:8px;}
+  .power-bar{height:12px;background:#111;border-radius:6px;overflow:hidden;margin-top:5px;}
+  #power-fill{height:100%;background:linear-gradient(to right,#2ecc71,#27ae60);width:100%;transition:width 0.4s;}
+  .night-progress{height:6px;background:#111;border-radius:3px;overflow:hidden;margin-top:5px;}
+  #night-fill{height:100%;background:linear-gradient(to right,#3498db,#9b59b6);width:0%;transition:width 0.5s;}
+  .warning{animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+  
+  /* Menú con historia */
+  #menu{position:fixed;inset:0;background:rgba(0,0,0,0.95);z-index:10000;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;padding:20px;}
+  .menu-title{font-size:48px;color:var(--timeline);margin-bottom:10px;text-align:center;text-shadow:0 0 20px var(--timeline);}
+  .menu-story{font-size:16px;color:#ccc;text-align:center;max-width:600px;line-height:1.6;margin-bottom:30px;}
+  .menu-btn{background:var(--accent);color:#000;border:none;padding:15px 30px;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;transition:0.3s;min-width:200px;text-align:center;}
+  .menu-btn:hover{transform:scale(1.05);background:#27ae60;}
+  .menu-btn.timeline{background:var(--timeline);}
+  .menu-btn.timeline:hover{background:#8e44ad;}
+  .menu-btn.danger{background:#e74c3c;}
+  .menu-btn.danger:hover{background:#c0392b;}
+  
+  /* Aliados UI */
+  .allies-container{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+  .ally-indicator{background:#1a1a2a;border:1px solid #9b59b6;border-radius:5px;padding:5px 8px;font-size:10px;color:#9b59b6;}
+  .ally-indicator.active{background:#9b59b6;color:#000;font-weight:bold;}
+  
+  /* Efectos temporales */
+  .time-rift{position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(circle at center, transparent 50%, rgba(155,89,182,0.3) 100%);animation:rift 3s infinite;pointer-events:none;z-index:5;}
+  @keyframes rift{0%,100%{opacity:0.3}50%{opacity:0.7}}
+  
+  /* Batalla final */
+  .battle-mode .office{background:linear-gradient(45deg,#000 25%,#2c3e50 50%,#000 75%);background-size:400% 400%;animation:battleBg 2s infinite;}
+  @keyframes battleBg{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
+  
+  .stats{position:absolute;top:10px;left:10px;background:rgba(0,0,0,0.7);padding:5px 10px;border-radius:5px;font-size:11px;border:1px solid #333;}
+
+
+/* RESPONSIVE DESIGN - FNAF MULTI-UNIVERSE - CORREGIDO */
+@media (max-width: 1024px) {
+  .card { 
+    width: 98vw; 
+    padding: 12px;
+    margin: 10px;
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+  body {
+    height: auto;
+    min-height: 100vh;
+    padding: 10px 0;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout { 
+    flex-direction: column; 
+    gap: 10px;
+  }
+  .view, .hud { 
+    width: 100%;
+    min-height: auto;
+  }
+  .office { 
+    height: 180px; 
+    min-height: 180px;
+  }
+  .door { 
+    width: 80px; 
+    min-width: 80px;
+  }
+  .monster { font-size: 70px; }
+  .ally { font-size: 45px; }
+  .door-emoji { font-size: 45px; }
+  .cams { 
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  #camScreen { 
+    height: 90px; 
+    font-size: 28px; 
+  }
+  .action-btn { 
+    padding: 10px 14px; 
+    font-size: 13px; 
+  }
+  .top { 
+    flex-direction: column; 
+    gap: 8px; 
+    text-align: center; 
+    margin-bottom: 15px;
+  }
+  h1 { font-size: 18px; }
+  #message-bar {
+    margin-bottom: 12px;
+    height: 32px;
+    font-size: 14px;
+  }
+  .menu-title { font-size: 32px; }
+  .menu-story { 
+    font-size: 15px; 
+    padding: 0 15px; 
+  }
+  .menu-btn { 
+    padding: 14px 22px; 
+    font-size: 17px; 
+    min-width: 180px; 
+  }
+  .btn-group { 
+    flex-direction: row; 
+    gap: 8px; 
+  }
+  .allies-container { 
+    justify-content: center; 
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .card { 
+    padding: 8px;
+    margin: 5px;
+  }
+  .office { 
+    height: 150px; 
+    min-height: 150px;
+  }
+  .door { 
+    width: 70px; 
+    min-width: 70px;
+  }
+  .monster { font-size: 50px; }
+  .ally { font-size: 35px; }
+  .door-emoji { font-size: 35px; }
+  .cams { 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 6px;
+  }
+  .cam-btn { 
+    padding: 10px 6px; 
+    font-size: 12px; 
+    min-height: 40px;
+  }
+  #camScreen { 
+    height: 70px; 
+    font-size: 22px; 
+  }
+  .control-row { 
+    padding: 10px; 
+    font-size: 13px; 
+  }
+  .action-btn { 
+    padding: 8px 12px; 
+    font-size: 12px; 
+    min-width: 80px;
+  }
+  .menu-title { font-size: 26px; }
+  .menu-story { 
+    font-size: 13px; 
+    padding: 0 10px; 
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <div class="menu-title">🎮 FNAF: CRISIS TEMPORAL</div>
+  <div class="menu-story">
+    🌟 <strong>LA HISTORIA:</strong> Los animatrónicos de FNAF 1 encontraron una máquina del tiempo. 
+    La mayoría se unieron para conquistar todas las eras, pero Freddy se negó. 
+    Ahora, Freddy y tú, el guardia, deben trabajar juntos para devolver a los animatrónicos 
+    rebeldes a sus líneas temporales originales. Cada noche, animatrónicos de otras eras 
+    recuperarán sus memorias y se unirán a vuestra causa. ¡La batalla final contra Springtrap 
+    decidirá el destino del multiverso! 🕰️⚔️
+  </div>
+  <button class="menu-btn" id="btn-single">Comenzar Aventura</button>
+  <button class="menu-btn timeline" id="btn-continue">Continuar Cruzada</button>
+  <button class="menu-btn danger" id="btn-reset">Reiniciar Línea Temporal</button>
+</div>
+
+<div class="card" style="display:none;">
+  <div class="top">
+    <h1>FNAF: Crisis Temporal - Noche <span id="night-num">1</span></h1>
+    <div><span id="clock">12:00 AM</span> | ⚡ <span id="power-pct">100%</span> | 🌟 <span id="allies-count">0 Aliados</span></div>
+  </div>
+  <div id="message-bar">¡Bienvenido! Freddy está de tu lado. Revisa las cámaras...</div>
+
+  <div class="layout">
+    <div class="view">
+      <div class="stats" id="game-stats">Amenazas: 0 | Aliados: 0</div>
+      <div id="time-rift" class="time-rift" style="display:none;"></div>
+      <div class="office">
+        <div class="door">
+          <div style="font-size:12px;">IZQ</div>
+          <div id="d-left" class="door-emoji">🚪</div>
+          <div id="warning-left" style="display:none;color:#e74c3c;font-size:10px;position:absolute;top:5px;">¡PELIGRO!</div>
+        </div>
+        <div class="center-view" id="main-view">
+          <div style="color:#333;font-size:14px;">Oficina de Freddy - Revisa cámaras</div>
+          <div id="freddy-ally" style="display:none;">
+            <div class="ally">🧸⭐</div>
+            <div style="color:#2ecc71;font-size:12px;margin-top:5px;">Freddy te protege</div>
+          </div>
+        </div>
+        <div class="door">
+          <div style="font-size:12px;">DER</div>
+          <div id="d-right" class="door-emoji">🚪</div>
+          <div id="warning-right" style="display:none;color:#e74c3c;font-size:10px;position:absolute;top:5px;">¡PELIGRO!</div>
+        </div>
+      </div>
+      <div class="night-progress"><div id="night-fill"></div></div>
+    </div>
+
+    <aside class="hud">
+      <div style="font-size:14px;color:#aaa;">Sistema de Cámaras Multitemporal</div>
+      <div class="cams" id="cam-grid"></div>
+      <div id="camScreen">🔍 Monitoreando...</div>
+      <div class="power-bar"><div id="power-fill"></div></div>
+
+      <div style="font-size:12px;color:#9b59b6;">🌟 ALIADOS TEMPORALES</div>
+      <div class="allies-container" id="allies-list">
+        <div class="ally-indicator">Freddy</div>
+      </div>
+
+      <div class="control-row">
+        <span id="mask-status">MÁSCARA TEMPORAL</span>
+        <button class="action-btn btn-mask" id="btn-mask">Activar Escudo</button>
+      </div>
+
+      <div class="control-row">
+        <span>DEFENSAS IZQUIERDA</span>
+        <div class="btn-group">
+          <button class="action-btn btn-light" id="btn-light-l">Luz</button>
+          <button class="action-btn btn-door" id="btn-door-l">Puerta</button>
+        </div>
+      </div>
+
+      <div class="control-row">
+        <span>DEFENSAS DERECHA</span>
+        <div class="btn-group">
+          <button class="action-btn btn-light" id="btn-light-r">Luz</button>
+          <button class="action-btn btn-door" id="btn-door-r">Puerta</button>
+        </div>
+      </div>
+      
+      <div class="control-row">
+        <span>ACCIÓN DE ALIADO</span>
+        <button class="action-btn btn-ally" id="btn-ally">Usar Aliado</button>
+      </div>
+      
+      <div style="font-size:11px;color:#777;text-align:center;">
+        🌟 Cada noche ganas nuevos aliados<br>
+        🕰️ Los aliados recuperan sus memorias<br>
+        ⚔️ Noche 6: Batalla final vs Springtrap
+      </div>
+      
+      <button class="action-btn" id="btn-menu" style="background:#7f8c8d;margin-top:10px;">Pausar Tiempo</button>
+    </aside>
+  </div>
+</div>
+
+<div id="jumpscare">
+  <div id="jumpscare-face">💀</div>
+  <div id="jumpscare-reason" style="font-size:40px;margin-top:30px;">GAME OVER</div>
+</div>
+
+<script>
+// TODOS LOS ANIMATRÓNICOS DE LA SAGA
+const ANIMATRONICS = {
+  // FNAF 1 - Base
+  fnaf1: [
+    {id:"Freddy", emoji:"🧸", type:"fnaf1", timeline:"presente", isAlly: true, allyPower: "protection"},
+    {id:"Bonnie", emoji:"🐰", type:"fnaf1", timeline:"presente", isHostile: true},
+    {id:"Chica", emoji:"🐤", type:"fnaf1", timeline:"presente", isHostile: true},
+    {id:"Foxy", emoji:"🦊", type:"fnaf1", timeline:"presente", isHostile: true},
+    {id:"Golden Freddy", emoji:"🌟", type:"special", timeline:"atemporal", isHostile: true}
+  ],
+  
+  // FNAF 2 - Withered + Toys
+  fnaf2: [
+    {id:"Withered Freddy", emoji:"🧸💀", type:"withered", timeline:"pasado", canBeAlly: true},
+    {id:"Withered Bonnie", emoji:"🐰💀", type:"withered", timeline:"pasado", isHostile: true},
+    {id:"Withered Chica", emoji:"🐤💀", type:"withered", timeline:"pasado", isHostile: true},
+    {id:"Withered Foxy", emoji:"🦊💀", type:"withered", timeline:"pasado", isHostile: true},
+    {id:"Toy Freddy", emoji:"🧸🎯", type:"toy", timeline:"pasado", canBeAlly: true},
+    {id:"Toy Bonnie", emoji:"🐇", type:"toy", timeline:"pasado", isHostile: true},
+    {id:"Toy Chica", emoji:"🐥", type:"toy", timeline:"pasado", isHostile: true},
+    {id:"Mangle", emoji:"🦝🔧", type:"mangle", timeline:"pasado", isHostile: true}
+  ],
+  
+  // FNAF 3 - Springtrap + Phantoms
+  fnaf3: [
+    {id:"Springtrap", emoji:"🐰💀", type:"springtrap", timeline:"futuro", isBoss: true, isHostile: true},
+    {id:"Phantom Freddy", emoji:"🧸👻", type:"phantom", timeline:"futuro", isHostile: true},
+    {id:"Phantom Bonnie", emoji:"🐰👻", type:"phantom", timeline:"futuro", isHostile: true},
+    {id:"Phantom Chica", emoji:"🐤👻", type:"phantom", timeline:"futuro", isHostile: true},
+    {id:"Phantom Foxy", emoji:"🦊👻", type:"phantom", timeline:"futuro", isHostile: true}
+  ],
+  
+  // FNAF 4 - Nightmares
+  fnaf4: [
+    {id:"Nightmare Freddy", emoji:"🧸😈", type:"nightmare", timeline:"pesadilla", canBeAlly: true},
+    {id:"Nightmare Bonnie", emoji:"🐰😈", type:"nightmare", timeline:"pesadilla", isHostile: true},
+    {id:"Nightmare Chica", emoji:"🐤😈", type:"nightmare", timeline:"pesadilla", isHostile: true},
+    {id:"Nightmare Foxy", emoji:"🦊😈", type:"nightmare", timeline:"pesadilla", isHostile: true},
+    {id:"Nightmare Fredbear", emoji:"🐻😈", type:"nightmare", timeline:"pesadilla", canBeAlly: true}
+  ]
+};
+
+// ALIADOS POR NOCHE
+const ALLIES_BY_NIGHT = {
+  1: ["Freddy"], // Freddy siempre está de tu lado
+  2: ["Withered Freddy"],
+  3: ["Toy Freddy"], 
+  4: ["Nightmare Freddy"],
+  5: ["Nightmare Fredbear"],
+  6: ["ALL"] // Todos los aliados en la batalla final
+};
+
+// ESTADO DEL JUEGO
+let state = {
+  night: 1,
+  power: 100,
+  startTime: 0,
+  cams: Array(15).fill().map(()=>[]),
+  office: {left:[], right:[]},
+  doors: {left:false, right:false},
+  lights: {left:false, right:false},
+  currentCam: 1,
+  gameOver: false,
+  mask: {isWearing:false, totalWornTime:0, cooldownUntil:0, maxWearTime:40000, cooldownMax:20000, lastTime:Date.now()},
+  allies: ["Freddy"],
+  activeAllies: [],
+  allyCooldown: 0,
+  timelineRift: false,
+  finalBattle: false
+};
+
+let danger = {left:{anim:null,timer:null}, right:{anim:null,timer:null}};
+let gameInterval, aiInterval;
+let hostileAnimatronics = [];
+
+// UI
+const ui = {
+  menu: document.getElementById('menu'),
+  game: document.querySelector('.card'),
+  nightNum: document.getElementById('night-num'),
+  clock: document.getElementById('clock'),
+  powerPct: document.getElementById('power-pct'),
+  powerFill: document.getElementById('power-fill'),
+  nightFill: document.getElementById('night-fill'),
+  messageBar: document.getElementById('message-bar'),
+  mainView: document.getElementById('main-view'),
+  dLeft: document.getElementById('d-left'),
+  dRight: document.getElementById('d-right'),
+  camScreen: document.getElementById('camScreen'),
+  camGrid: document.getElementById('cam-grid'),
+  maskBtn: document.getElementById('btn-mask'),
+  maskStatus: document.getElementById('mask-status'),
+  jumpscare: document.getElementById('jumpscare'),
+  jumpscareFace: document.getElementById('jumpscare-face'),
+  jumpscareReason: document.getElementById('jumpscare-reason'),
+  btnMenu: document.getElementById('btn-menu'),
+  warningLeft: document.getElementById('warning-left'),
+  warningRight: document.getElementById('warning-right'),
+  freddyAlly: document.getElementById('freddy-ally'),
+  alliesList: document.getElementById('allies-list'),
+  alliesCount: document.getElementById('allies-count'),
+  gameStats: document.getElementById('game-stats'),
+  timeRift: document.getElementById('time-rift'),
+  btnAlly: document.getElementById('btn-ally')
+};
+
+// SISTEMA DE GUARDADO TEMPORAL
+function saveGame() {
+  const saveData = {
+    night: state.night,
+    allies: state.allies,
+    timeline: "crisis_temporal"
+  };
+  localStorage.setItem('fnaf_temporal_save', JSON.stringify(saveData));
+}
+
+function loadGame() {
+  const saveData = localStorage.getItem('fnaf_temporal_save');
+  if (saveData) {
+    const data = JSON.parse(saveData);
+    state.night = data.night || 1;
+    state.allies = data.allies || ["Freddy"];
+    return true;
+  }
+  return false;
+}
+
+function resetGame() {
+  localStorage.removeItem('fnaf_temporal_save');
+  state.night = 1;
+  state.allies = ["Freddy"];
+}
+
+// MENÚ PRINCIPAL
+function showMenu() {
+  clearIntervals();
+  ui.menu.style.display = 'flex';
+  ui.game.style.display = 'none';
+  
+  document.getElementById('btn-continue').disabled = !loadGame();
+}
+
+function startGame(mode, continueGame = false) {
+  if (!continueGame) {
+    state.night = 1;
+    state.allies = ["Freddy"];
+  }
+  
+  ui.menu.style.display = 'none';
+  ui.game.style.display = 'block';
+  
+  initGame();
+}
+
+function clearIntervals() {
+  if (gameInterval) clearInterval(gameInterval);
+  if (aiInterval) clearInterval(aiInterval);
+}
+
+// INICIALIZACIÓN DEL JUEGO
+function initGame() {
+  state.startTime = Date.now();
+  state.power = 100;
+  state.cams = Array(15).fill().map(()=>[]);
+  state.office = {left:[], right:[]};
+  state.doors = {left:false, right:false};
+  state.lights = {left:false, right:false};
+  state.currentCam = 1;
+  state.gameOver = false;
+  state.mask = {isWearing:false, totalWornTime:0, cooldownUntil:0, maxWearTime:40000, cooldownMax:20000, lastTime:Date.now()};
+  state.allyCooldown = 0;
+  state.timelineRift = false;
+  state.finalBattle = state.night === 6;
+
+  // Actualizar aliados según la noche
+  updateAlliesForNight();
+  
+  danger = {left:{anim:null,timer:null}, right:{anim:null,timer:null}};
+  hostileAnimatronics = getAllHostileAnimatronics();
+
+  // Configurar UI
+  ui.nightNum.textContent = state.night;
+  ui.alliesCount.textContent = `${state.allies.length} Aliados`;
+  ui.freddyAlly.style.display = 'block';
+  
+  if (state.finalBattle) {
+    ui.messageBar.textContent = "⚔️ ¡BATALLA FINAL! Enfrenta a Springtrap con todos tus aliados";
+    document.querySelector('.card').classList.add('battle-mode');
+    ui.timeRift.style.display = 'block';
+  }
+
+  // Configurar cámaras (15 cámaras para todas las eras)
+  ui.camGrid.innerHTML = '';
+  for(let i=1;i<=15;i++){
+    let b = document.createElement('button');
+    b.className='cam-btn'; 
+    b.textContent=`ERA ${i}`; 
+    b.onclick=()=>setCam(i); 
+    b.id='cam'+i;
+    ui.camGrid.appendChild(b);
+  }
+  document.getElementById('cam1').classList.add('active');
+
+  // Configurar controles
+  document.getElementById('btn-light-l').onclick = () => toggleLight('left');
+  document.getElementById('btn-light-r').onclick = () => toggleLight('right');
+  document.getElementById('btn-door-l').onclick = () => toggleDoor('left');
+  document.getElementById('btn-door-r').onclick = () => toggleDoor('right');
+  ui.maskBtn.onclick = toggleMask;
+  ui.btnAlly.onclick = useAllyPower;
+  ui.btnMenu.onclick = showMenu;
+
+  // Distribuir animatrónicos hostiles
+  distributeHostileAnimatronics();
+  updateCamScreen();
+  updateView();
+  updateAlliesUI();
+  
+  // Iniciar bucles del juego
+  clearIntervals();
+  gameInterval = setInterval(gameLoop, 100);
+  aiInterval = setInterval(moveAI, Math.max(8000, 15000 - (state.night*1200)));
+  
+  saveGame();
+}
+
+function updateAlliesForNight() {
+  const newAllies = ALLIES_BY_NIGHT[state.night] || ["Freddy"];
+  newAllies.forEach(ally => {
+    if (!state.allies.includes(ally)) {
+      state.allies.push(ally);
+      showMessage(`¡${ally} se unió a tu causa! Recuerda su pasado...`, 4000);
+    }
+  });
+}
+
+function getAllHostileAnimatronics() {
+  let hostiles = [];
+  Object.values(ANIMATRONICS).forEach(group => {
+    group.forEach(anim => {
+      if (anim.isHostile && !state.allies.includes(anim.id)) {
+        hostiles.push(anim);
+      }
+    });
+  });
+  return hostiles;
+}
+
+function distributeHostileAnimatronics() {
+  // Limpiar cámaras
+  state.cams = Array(15).fill().map(()=>[]);
+  
+  // Distribuir animatrónicos hostiles aleatoriamente
+  hostileAnimatronics.forEach(anim => {
+    const cam = Math.floor(Math.random() * 15) + 1;
+    state.cams[cam].push(anim);
+  });
+}
+
+function updateAlliesUI() {
+  ui.alliesList.innerHTML = '';
+  state.allies.forEach(ally => {
+    const indicator = document.createElement('div');
+    indicator.className = 'ally-indicator';
+    indicator.textContent = ally;
+    if (state.activeAllies.includes(ally)) {
+      indicator.classList.add('active');
+    }
+    ui.alliesList.appendChild(indicator);
+  });
+  ui.alliesCount.textContent = `${state.allies.length} Aliados`;
+}
+
+// MECÁNICAS DE ALIADOS
+function useAllyPower() {
+  if (state.gameOver || state.allyCooldown > 0 || state.activeAllies.length >= 2) return;
+  
+  const availableAllies = state.allies.filter(ally => !state.activeAllies.includes(ally));
+  if (availableAllies.length === 0) return;
+  
+  const randomAlly = availableAllies[Math.floor(Math.random() * availableAllies.length)];
+  state.activeAllies.push(randomAlly);
+  state.allyCooldown = 30000; // 30 segundos de cooldown
+  
+  // Efecto especial según el aliado
+  let effectMessage = "";
+  if (randomAlly.includes("Freddy")) {
+    effectMessage = "¡Freddy bloquea todos los ataques por 15 segundos!";
+    activateFreddyProtection();
+  } else if (randomAlly.includes("Withered")) {
+    effectMessage = "¡Withered Freddy asusta a los animatrónicos hostiles!";
+    scareHostileAnimatronics();
+  } else if (randomAlly.includes("Toy")) {
+    effectMessage = "¡Toy Freddy mejora tu sistema de energía!";
+    boostPowerSystem();
+  } else if (randomAlly.includes("Nightmare")) {
+    effectMessage = "¡Nightmare Freddy ataca a los hostiles directamente!";
+    attackHostileAnimatronics();
+  }
+  
+  showMessage(`🌟 ${effectMessage}`, 3000);
+  updateAlliesUI();
+}
+
+function activateFreddyProtection() {
+  // Protección temporal - cancela todos los ataques en progreso
+  Object.values(danger).forEach(side => {
+    if (side.timer) {
+      clearTimeout(side.timer);
+      side.timer = null;
+      side.anim = null;
+    }
+  });
+  state.office = {left:[], right:[]};
+  updateView();
+  
+  setTimeout(() => {
+    state.activeAllies = state.activeAllies.filter(a => !a.includes("Freddy"));
+    updateAlliesUI();
+    showMessage("La protección de Freddy ha terminado", 2000);
+  }, 15000);
+}
+
+function scareHostileAnimatronics() {
+  // Los hostiles se retiran temporalmente
+  hostileAnimatronics = hostileAnimatronics.filter(anim => 
+    Math.random() < 0.7 // 70% de probabilidad de que se asusten
+  );
+  
+  setTimeout(() => {
+    state.activeAllies = state.activeAllies.filter(a => !a.includes("Withered"));
+    updateAlliesUI();
+    hostileAnimatronics = getAllHostileAnimatronics(); // Restaurar hostiles
+  }, 20000);
+}
+
+function boostPowerSystem() {
+  state.power = Math.min(100, state.power + 30);
+  
+  setTimeout(() => {
+    state.activeAllies = state.activeAllies.filter(a => !a.includes("Toy"));
+    updateAlliesUI();
+  }, 25000);
+}
+
+function attackHostileAnimatronics() {
+  // Elimina algunos hostiles aleatoriamente
+  const casualties = Math.min(3, hostileAnimatronics.length);
+  for (let i = 0; i < casualties; i++) {
+    if (hostileAnimatronics.length > 0) {
+      const index = Math.floor(Math.random() * hostileAnimatronics.length);
+      hostileAnimatronics.splice(index, 1);
+    }
+  }
+  
+  setTimeout(() => {
+    state.activeAllies = state.activeAllies.filter(a => !a.includes("Nightmare"));
+    updateAlliesUI();
+  }, 15000);
+}
+
+// MECÁNICAS DEL JUEGO (similares a FNAF 1 pero mejoradas)
+function toggleDoor(side){
+  if(state.gameOver || state.mask.isWearing) return;
+  if(state.doors[side]){
+    state.doors[side] = false;
+  } else {
+    state.doors.left = state.doors.right = false;
+    state.doors[side] = true;
+    if(danger[side].anim) clearDanger(side);
+  }
+  updateView();
+}
+
+function toggleLight(side){
+  if(state.gameOver || state.mask.isWearing) return;
+  state.lights[side] = !state.lights[side];
+  if(side==='left') state.lights.right = false;
+  if(side==='right') state.lights.left = false;
+  updateView();
+}
+
+function toggleMask(){
+  if(state.gameOver) return;
+  const now = Date.now();
+  if(state.mask.isWearing){
+    state.mask.isWearing = false;
+    state.mask.cooldownUntil = now + state.mask.cooldownMax;
+  } else {
+    if(now < state.mask.cooldownUntil || state.mask.totalWornTime >= state.mask.maxWearTime) return;
+    state.mask.isWearing = true;
+  }
+  updateView();
+  updateMaskUI();
+}
+
+function updateMaskUI(){
+  const m = state.mask;
+  const now = Date.now();
+  if(m.isWearing){
+    ui.maskBtn.textContent = "Desactivar Escudo";
+    ui.maskStatus.textContent = `Escudo: ${((m.maxWearTime-m.totalWornTime)/1000).toFixed(1)}s`;
+  } else {
+    if(now < m.cooldownUntil){
+      ui.maskBtn.textContent = `Recargando ${Math.ceil((m.cooldownUntil-now)/1000)}s`;
+      ui.maskBtn.disabled = true;
+    } else {
+      ui.maskBtn.textContent = "Activar Escudo";
+      ui.maskBtn.disabled = m.totalWornTime >= m.maxWearTime;
+      ui.maskStatus.textContent = m.totalWornTime >= m.maxWearTime ? "ESCUDO AGOTADO" : "ESCUDO LISTO";
+    }
+  }
+}
+
+function updateView(){
+  ui.dLeft.textContent = state.doors.left ? '🔒' : '🚪';
+  ui.dRight.textContent = state.doors.right ? '🔒' : '🚪';
+  document.getElementById('btn-door-l').classList.toggle('active', state.doors.left);
+  document.getElementById('btn-door-r').classList.toggle('active', state.doors.right);
+
+  let html = '<div style="color:#333;font-size:14px;">Oficina temporal segura</div>';
+  const left = state.office.left[0];
+  const right = state.office.right[0];
+
+  // Mostrar aliados activos
+  if (state.activeAllies.length > 0) {
+    html += `<div style="color:#9b59b6;font-size:12px;margin-top:10px;">Aliados activos: ${state.activeAllies.join(', ')}</div>`;
+  }
+
+  if(left || right){
+    const anim = left || right;
+    html = `<div class="monster">${anim.emoji}</div><div style="color:#e74c3c;font-size:16px;margin-top:10px;">¡${anim.id} ataca!</div>`;
+  }
+  else if(state.lights.left){
+    html = left ? `<div class="monster">${left.emoji}</div>` : '<div style="color:#666">Pasillo izquierdo vacío</div>';
+  }
+  else if(state.lights.right){
+    html = right ? `<div class="monster">${right.emoji}</div>` : '<div style="color:#666">Pasillo derecho vacío</div>';
+  }
+  
+  ui.mainView.innerHTML = html;
+}
+
+// IA MEJORADA CON MECÁNICAS TEMPORALES
+function moveAI(){
+  if(state.gameOver) return;
+  
+  clearDanger('left'); 
+  clearDanger('right');
+  
+  // En la batalla final, Springtrap es más agresivo
+  if (state.finalBattle) {
+    const springtrap = ANIMATRONICS.fnaf3.find(a => a.id === "Springtrap");
+    if (springtrap && Math.random() < 0.6) {
+      const side = Math.random() < 0.5 ? 'left' : 'right';
+      state.office[side].push(springtrap);
+      showMessage("¡SPRINGTRAP ATACA DIRECTAMENTE!", 2000);
+      danger[side].anim = springtrap;
+      danger[side].timer = setTimeout(()=>{
+        if(!state.doors[side]) triggerJumpscare(springtrap, "¡Springtrap te alcanzó!");
+      }, 5000);
+    }
+  }
+
+  // Movimiento de animatrónicos hostiles normales
+  hostileAnimatronics.forEach(anim => {
+    if(Math.random() < 0.3 + (state.night * 0.1)){
+      const side = Math.random()<0.5 ? 'left' : 'right';
+      if(state.office[side].length===0){
+        state.office[side].push(anim);
+        showMessage(`${anim.emoji} ${anim.id} se acerca...`, 2500);
+        danger[side].anim = anim;
+        danger[side].timer = setTimeout(()=>{
+          if(!state.doors[side]) triggerJumpscare(anim, `${anim.id} te atrapó`);
+        }, 7000 - (state.night * 800));
+      }
+    }
+  });
+
+  updateView();
+}
+
+function setCam(n){
+  state.currentCam = n;
+  document.querySelectorAll('.cam-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cam'+n).classList.add('active');
+  updateCamScreen();
+}
+
+function updateCamScreen(){
+  const list = state.cams[state.currentCam];
+  if (list.length > 0) {
+    const timeline = list[0].timeline;
+    const timelineEmojis = {
+      "presente": "🕐",
+      "pasado": "🕐",
+      "futuro": "🕐", 
+      "pesadilla": "🌙",
+      "atemporal": "🌀"
+    };
+    ui.camScreen.textContent = `${timelineEmojis[timeline]} ${list.map(a=>a.emoji).join(' ')}`;
+  } else {
+    ui.camScreen.textContent = '📍 Zona temporal segura';
+  }
+}
+
+function showMessage(txt, t=4000){
+  ui.messageBar.textContent = txt;
+  setTimeout(()=>ui.messageBar.textContent='', t);
+}
+
+function clearDanger(s){ 
+  if(danger[s].timer) clearTimeout(danger[s].timer); 
+  danger[s]={anim:null,timer:null}; 
+  state.office[s]=[]; 
+}
+
+function gameLoop(){
+  if(state.gameOver) return;
+  const now = Date.now();
+  const elapsed = (now - state.startTime) / 1000;
+  const nightDuration = state.finalBattle ? 420 : 300 + state.night*60;
+  const progress = elapsed / nightDuration;
+
+  // Reloj
+  const h = Math.min(5, Math.floor(progress * 6));
+  const m = Math.floor((progress * 6 - h) * 60);
+  ui.clock.textContent = `${h||12}:${m.toString().padStart(2,'0')} ${h < 6 ? 'AM' : 'AM'}`;
+
+  // Barra de progreso de la noche
+  ui.nightFill.style.width = `${Math.min(100, progress * 100)}%`;
+
+  if(progress >= 1){ winNight(); return; }
+
+  // Energía - consumo balanceado
+  let drain = 0.02;
+  if(state.lights.left || state.lights.right) drain += 0.03;
+  if(state.doors.left || state.doors.right) drain += 0.05;
+  
+  // Aliados reducen el consumo
+  if (state.activeAllies.length > 0) {
+    drain *= 0.7;
+  }
+  
+  state.power = Math.max(0, state.power - drain * state.night * 0.15);
+  ui.powerPct.textContent = Math.floor(state.power)+'%';
+  ui.powerFill.style.width = state.power+'%';
+  
+  // Sistema de advertencia de energía
+  if(state.power <= 20) {
+    ui.powerFill.style.background = 'linear-gradient(to right,#e74c3c,#c0392b)';
+    if(state.power <= 10) {
+      ui.powerPct.classList.add('warning');
+    } else {
+      ui.powerPct.classList.remove('warning');
+    }
+  } else {
+    ui.powerFill.style.background = 'linear-gradient(to right,#2ecc71,#27ae60)';
+    ui.powerPct.classList.remove('warning');
+  }
+  
+  if(state.power <= 0){ 
+    triggerJumpscare(null,"¡Energía temporal agotada!"); 
+    return; 
+  }
+
+  // Cooldown de aliados
+  if (state.allyCooldown > 0) {
+    state.allyCooldown -= 100;
+    ui.btnAlly.textContent = `Aliados: ${Math.ceil(state.allyCooldown/1000)}s`;
+    ui.btnAlly.disabled = true;
+  } else {
+    ui.btnAlly.textContent = "Usar Aliado";
+    ui.btnAlly.disabled = state.activeAllies.length >= 2;
+  }
+
+  // Máscara/escudo
+  if(state.mask.isWearing){
+    state.mask.totalWornTime += 100;
+    if(state.mask.totalWornTime >= state.mask.maxWearTime){
+      triggerJumpscare(null,"¡Escudo temporal sobrecargado!");
+      return;
+    }
+  }
+
+  // Actualizar estadísticas
+  ui.gameStats.textContent = `Amenazas: ${hostileAnimatronics.length} | Aliados: ${state.allies.length}`;
+
+  updateMaskUI();
+}
+
+function triggerJumpscare(anim, reason){
+  if(state.gameOver) return;
+  state.gameOver = true;
+  ui.jumpscareFace.textContent = anim?.emoji || '💀';
+  ui.jumpscareReason.textContent = reason || "GAME OVER";
+  ui.jumpscare.classList.add('active');
+  setTimeout(() => {
+    ui.jumpscare.classList.remove('active');
+    showMenu();
+  }, 4000);
+}
+
+function winNight(){
+  state.gameOver = true;
+  
+  if (state.night === 6) {
+    // VICTORIA FINAL
+    ui.jumpscareFace.textContent = '🏆';
+    ui.jumpscareReason.textContent = `¡VICTORIA! Has restaurado las líneas temporales\n¡Springtrap ha sido derrotado!`;
+    showMessage("¡El multiverso está a salvo! Gracias por jugar", 10000);
+  } else {
+    const next = state.night + 1;
+    state.night = next;
+    ui.jumpscareFace.textContent = '🌟';
+    ui.jumpscareReason.textContent = `¡Noche ${state.night-1} completada!\n¡Ganas nuevos aliados temporales!`;
+  }
+  
+  ui.jumpscare.classList.add('active');
+  setTimeout(() => {
+    ui.jumpscare.classList.remove('active');
+    showMenu();
+  }, 6000);
+  
+  saveGame();
+}
+
+// INICIALIZACIÓN
+document.getElementById('btn-single').onclick = () => startGame("single");
+document.getElementById('btn-continue').onclick = () => startGame("single", true);
+document.getElementById('btn-reset').onclick = () => {
+  resetGame();
+  showMenu();
+};
+
+loadGame();
+showMenu();
+</script>
+</body>
+</html>

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>FNAF 3: Springtrap Edition</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{--bg:#020317;--accent:#2ecc71;--danger:#e74c3c;--warning:#f1c40f;}
+  body{margin:0;font-family:system-ui,sans-serif;background:linear-gradient(180deg,#020317,#071229);color:#fff;display:flex;justify-content:center;align-items:center;height:100vh;overflow:hidden;}
+  .card{width:960px;max-width:98vw;background:linear-gradient(180deg,#081227,#071525);border-radius:16px;padding:15px;box-shadow:0 20px 60px rgba(0,0,0,0.9);border:1px solid #1c2533;}
+  .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+  h1{font-size:20px;margin:0;}
+  .layout{display:flex;gap:15px;flex-wrap:wrap;}
+  .view{flex:2;background:#000;border-radius:12px;padding:12px;min-height:340px;position:relative;border:2px solid #222;}
+  .hud{flex:1;min-width:300px;background:#071522;border-radius:12px;padding:15px;border:1px solid #1c2533;display:flex;flex-direction:column;gap:12px;}
+  .office{display:flex;height:260px;background:#050505;border-radius:10px;overflow:hidden;border:1px solid #333;}
+  .vent{width:90px;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;}
+  .vent-emoji{font-size:56px;}
+  .center-view{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;background:#000;position:relative;}
+  .monster{font-size:100px;filter:drop-shadow(0 0 20px red);animation:shake 0.35s infinite;}
+  @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(5px)}75%{transform:translateX(-5px)}}
+  .phantom{font-size:80px;filter:drop-shadow(0 0 15px green);animation:float 2s infinite;}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  .cams{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+  .cam-btn{background:#0f1724;border:1px solid #333;color:#aaa;padding:11px;border-radius:6px;cursor:pointer;font-size:13px;transition:0.2s;}
+  .cam-btn:hover{background:#1a2338;}
+  .cam-btn.active{background:var(--accent);color:#000;font-weight:bold;}
+  #camScreen{height:100px;background:#000;border:1px solid #333;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:40px;color:var(--accent);text-shadow:0 0 10px var(--accent);}
+  .control-row{display:flex;justify-content:space-between;align-items:center;background:#0b1220;padding:12px;border-radius:8px;border:1px solid #1c2533;}
+  .btn-group{display:flex;gap:10px;}
+  .action-btn{padding:11px 18px;border:none;border-radius:6px;cursor:pointer;font-weight:bold;transition:0.2s;}
+  .btn-audio{background:#3498db;color:#fff;}
+  .btn-reboot{background:#f1c40f;color:#000;}
+  #jumpscare{position:fixed;inset:0;background:#fff;z-index:9999;display:none;align-items:center;justify-content:center;flex-direction:column;color:#000;font-size:180px;}
+  #jumpscare.active{display:flex;animation:jumpscare 0.9s;}
+  @keyframes jumpscare{0%{transform:scale(0)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
+  #message-bar{height:28px;text-align:center;color:var(--warning);font-weight:bold;font-size:16px;margin-bottom:8px;}
+  .system-bar{height:12px;background:#111;border-radius:6px;overflow:hidden;margin-top:5px;}
+  #system-fill{height:100%;background:linear-gradient(to right,#2ecc71,#27ae60);width:100%;transition:width 0.4s;}
+  .night-progress{height:6px;background:#111;border-radius:3px;overflow:hidden;margin-top:5px;}
+  #night-fill{height:100%;background:linear-gradient(to right,#3498db,#9b59b6);width:0%;transition:width 0.5s;}
+  .warning{animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+  
+  /* Menú */
+  #menu{position:fixed;inset:0;background:rgba(0,0,0,0.9);z-index:10000;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;}
+  .menu-title{font-size:40px;color:#fff;margin-bottom:30px;text-align:center;}
+  .menu-btn{background:var(--accent);color:#000;border:none;padding:15px 30px;border-radius:8px;font-size:18px;font-weight:bold;cursor:pointer;transition:0.3s;min-width:200px;text-align:center;}
+  .menu-btn:hover{transform:scale(1.05);background:#27ae60;}
+  .menu-btn.secondary{background:#3498db;}
+  .menu-btn.secondary:hover{background:#2980b9;}
+  .menu-btn.danger{background:#e74c3c;}
+  .menu-btn.danger:hover{background:#c0392b;}
+  
+  /* Avisos */
+  .vent-warning{position:absolute;top:5px;left:0;right:0;text-align:center;font-size:12px;color:#e74c3c;font-weight:bold;animation:glow 1s infinite;}
+  @keyframes glow{0%,100%{opacity:1}50%{opacity:0.5}}
+  
+  /* Botón de Springtrap */
+  #springtrap-btn{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#e74c3c;color:white;border:none;padding:15px 25px;border-radius:8px;font-size:16px;font-weight:bold;cursor:pointer;z-index:20;display:none;}
+  #springtrap-btn:hover{background:#c0392b;}
+  
+  /* Ventana de Phantom */
+  .phantom-window{position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:15;flex-direction:column;}
+  
+  /* Efectos de error */
+  .system-error{animation:errorFlash 0.3s infinite;}
+  @keyframes errorFlash{0%,100%{filter:brightness(1)}50%{filter:brightness(1.3)}}
+  
+  .audio-error .btn-audio{background:#e74c3c !important;}
+  .camera-error #camScreen{color:#e74c3c !important;}
+  .reboot-error .btn-reboot{background:#e74c3c !important;}
+
+
+/* RESPONSIVE DESIGN - FNAF 3 - CORREGIDO */
+@media (max-width: 1024px) {
+  .card { 
+    width: 98vw; 
+    padding: 12px;
+    margin: 10px;
+    max-height: 95vh;
+    overflow-y: auto;
+  }
+  body {
+    height: auto;
+    min-height: 100vh;
+    padding: 10px 0;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .layout { 
+    flex-direction: column; 
+    gap: 10px;
+  }
+  .view, .hud { 
+    width: 100%;
+    min-height: auto;
+  }
+  .office { 
+    height: 180px; 
+    min-height: 180px;
+  }
+  .vent { 
+    width: 80px; 
+    min-width: 80px;
+  }
+  .monster { font-size: 70px; }
+  .phantom { font-size: 55px; }
+  .vent-emoji { font-size: 45px; }
+  .cams { 
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+  #camScreen { 
+    height: 90px; 
+    font-size: 28px; 
+  }
+  .action-btn { 
+    padding: 10px 14px; 
+    font-size: 13px; 
+  }
+  .top { 
+    flex-direction: column; 
+    gap: 8px; 
+    text-align: center; 
+    margin-bottom: 15px;
+  }
+  h1 { font-size: 18px; }
+  #message-bar {
+    margin-bottom: 12px;
+    height: 32px;
+    font-size: 14px;
+  }
+  #springtrap-btn { 
+    padding: 12px 18px; 
+    font-size: 15px; 
+  }
+}
+
+@media (max-width: 480px) {
+  .card { 
+    padding: 8px;
+    margin: 5px;
+  }
+  .office { 
+    height: 150px; 
+    min-height: 150px;
+  }
+  .vent { 
+    width: 70px; 
+    min-width: 70px;
+  }
+  .monster { font-size: 50px; }
+  .phantom { font-size: 40px; }
+  .vent-emoji { font-size: 35px; }
+  .cams { 
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 6px;
+  }
+  .cam-btn { 
+    padding: 10px 6px; 
+    font-size: 12px; 
+    min-height: 40px;
+  }
+  #camScreen { 
+    height: 70px; 
+    font-size: 22px; 
+  }
+  .control-row { 
+    padding: 10px; 
+    font-size: 13px; 
+  }
+  .action-btn { 
+    padding: 8px 12px; 
+    font-size: 12px; 
+    min-width: 80px;
+  }
+  #springtrap-btn { 
+    padding: 10px 15px; 
+    font-size: 13px; 
+  }
+}
+</style>
+</head>
+<body>
+
+<div id="menu">
+  <div class="menu-title">FNAF 3: Springtrap Edition</div>
+  <button class="menu-btn" id="btn-single">Un Jugador</button>
+  <button class="menu-btn" id="btn-continue">Continuar Noche</button>
+  <button class="menu-btn danger" id="btn-reset">Reiniciar Progreso</button>
+</div>
+
+<div class="card" style="display:none;">
+  <div class="top">
+    <h1>FNAF 3: Springtrap Edition</h1>
+    <div>Noche <span id="night-num">1</span> | <span id="clock">12:00 AM</span> | Sistema: <span id="system-pct">100%</span></div>
+  </div>
+  <div id="message-bar">Monitorea las ventilaciones para Springtrap...</div>
+
+  <div class="layout">
+    <div class="view">
+      <div class="office">
+        <div class="vent" id="vent-left">
+          <div style="font-size:12px;">VENT IZQ</div>
+          <div id="v-left" class="vent-emoji">🕳️</div>
+          <div id="warning-left" class="vent-warning" style="display:none;">¡SPRINGTRAP!</div>
+        </div>
+        <div class="center-view" id="main-view">
+          <div style="color:#333;font-size:14px;">Sala de control</div>
+          <button id="springtrap-btn" onclick="redirectSpringtrap()">🔒 CERRAR VENTILACIÓN</button>
+          <div id="phantom-window" class="phantom-window">
+            <div class="phantom" id="phantom-emoji">👻</div>
+            <div style="color:#f1c40f;font-size:20px;margin-top:20px;" id="phantom-message"></div>
+          </div>
+        </div>
+        <div class="vent" id="vent-right">
+          <div style="font-size:12px;">VENT DER</div>
+          <div id="v-right" class="vent-emoji">🕳️</div>
+          <div id="warning-right" class="vent-warning" style="display:none;">¡SPRINGTRAP!</div>
+        </div>
+      </div>
+      <div class="night-progress"><div id="night-fill"></div></div>
+    </div>
+
+    <aside class="hud">
+      <div style="font-size:14px;color:#aaa;">Cámaras del Complejo</div>
+      <div class="cams" id="cam-grid"></div>
+      <div id="camScreen">Monitoreando...</div>
+      
+      <div style="font-size:12px;color:#777;margin-top:5px;">
+        ⚡ Estado del Sistema
+      </div>
+      <div class="system-bar"><div id="system-fill"></div></div>
+
+      <div class="control-row">
+        <span>SONIDO ATRAYENTE</span>
+        <button class="action-btn btn-audio" id="btn-audio">Activar Audio</button>
+      </div>
+
+      <div class="control-row">
+        <span>REINICIO DE SISTEMAS</span>
+        <button class="action-btn btn-reboot" id="btn-reboot">Reiniciar</button>
+      </div>
+      
+      <div style="font-size:11px;color:#777;text-align:center;">
+        👻 Phantoms desactivan sistemas<br>
+        🐰 Usa audio para atraer a Springtrap<br>
+        🔒 Cierra ventanas cuando aparezca (2s)
+      </div>
+      
+      <button class="action-btn" id="btn-menu" style="background:#7f8c8d;margin-top:10px;">Volver al Menú</button>
+    </aside>
+  </div>
+</div>
+
+<div id="jumpscare">
+  <div id="jumpscare-face">💀</div>
+  <div id="jumpscare-reason" style="font-size:40px;margin-top:30px;">GAME OVER</div>
+</div>
+
+<script>
+// ANIMATRÓNICOS DE FNAF 3 - Springtrap y Phantoms
+const ANIMATRONICS = [
+  // Springtrap - el principal antagonista
+  {id:"Springtrap", emoji:"🐰💀", type:"springtrap", attackTime:20000, ventSpeed: 1},
+  
+  // Phantom Animatronics - causan problemas en sistemas
+  {id:"Phantom Freddy", emoji:"🧸👻", type:"phantom", effect:"system", duration: 5000, message: "¡Sistema principal comprometido!"},
+  {id:"Phantom Bonnie", emoji:"🐰👻", type:"phantom", effect:"audio", duration: 4000, message: "¡Sistema de audio fallando!"},
+  {id:"Phantom Chica", emoji:"🐤👻", type:"phantom", effect:"camera", duration: 6000, message: "¡Cámaras desactivadas!"},
+  {id:"Phantom Foxy", emoji:"🦊👻", type:"phantom", effect:"vent", duration: 4500, message: "¡Control de ventilaciones perdido!"},
+  {id:"Phantom Mangle", emoji:"🦝👻", type:"phantom", effect:"reboot", duration: 5500, message: "¡Sistema de reinicio bloqueado!"},
+  {id:"Phantom Balloon Boy", emoji:"🤡👻", type:"phantom", effect:"visual", duration: 3000, message: "¡Interferencia visual!"}
+];
+
+const SPRINGTRAP = ANIMATRONICS.find(a => a.type === "springtrap");
+const PHANTOMS = ANIMATRONICS.filter(a => a.type === "phantom");
+
+// ESTADO
+let state = {
+  night: 1,
+  system: 100,
+  startTime: 0,
+  cams: Array(10).fill().map(()=>[]),
+  vents: {left:false, right:false, springtrapLocation: null},
+  audioActive: false,
+  currentCam: 1,
+  gameOver: false,
+  springtrapVisible: false,
+  springtrapTimer: null,
+  phantomActive: false,
+  systemErrors: {audio: false, camera: false, vent: false, reboot: false, visual: false},
+  gameMode: "single"
+};
+
+let gameInterval, aiInterval, phantomInterval;
+let springtrapAttackTimer = null;
+
+// UI
+const ui = {
+  menu: document.getElementById('menu'),
+  game: document.querySelector('.card'),
+  nightNum: document.getElementById('night-num'),
+  clock: document.getElementById('clock'),
+  systemPct: document.getElementById('system-pct'),
+  systemFill: document.getElementById('system-fill'),
+  nightFill: document.getElementById('night-fill'),
+  messageBar: document.getElementById('message-bar'),
+  mainView: document.getElementById('main-view'),
+  vLeft: document.getElementById('v-left'),
+  vRight: document.getElementById('v-right'),
+  camScreen: document.getElementById('camScreen'),
+  camGrid: document.getElementById('cam-grid'),
+  springtrapBtn: document.getElementById('springtrap-btn'),
+  jumpscare: document.getElementById('jumpscare'),
+  jumpscareFace: document.getElementById('jumpscare-face'),
+  jumpscareReason: document.getElementById('jumpscare-reason'),
+  btnMenu: document.getElementById('btn-menu'),
+  warningLeft: document.getElementById('warning-left'),
+  warningRight: document.getElementById('warning-right'),
+  phantomWindow: document.getElementById('phantom-window'),
+  phantomEmoji: document.getElementById('phantom-emoji'),
+  phantomMessage: document.getElementById('phantom-message')
+};
+
+// SISTEMA DE GUARDADO
+function saveGame() {
+  const saveData = {
+    night: state.night,
+    mode: state.gameMode
+  };
+  localStorage.setItem('fnaf3_save', JSON.stringify(saveData));
+}
+
+function loadGame() {
+  const saveData = localStorage.getItem('fnaf3_save');
+  if (saveData) {
+    const data = JSON.parse(saveData);
+    state.night = data.night || 1;
+    state.gameMode = data.mode || "single";
+    return true;
+  }
+  return false;
+}
+
+function resetGame() {
+  localStorage.removeItem('fnaf3_save');
+  state.night = 1;
+  state.gameMode = "single";
+}
+
+// MENÚ PRINCIPAL
+function showMenu() {
+  clearIntervals();
+  ui.menu.style.display = 'flex';
+  ui.game.style.display = 'none';
+  
+  document.getElementById('btn-continue').disabled = !loadGame();
+}
+
+function startGame(mode, continueGame = false) {
+  if (!continueGame) {
+    state.night = mode === "multi" ? 1 : state.night;
+    state.gameMode = mode;
+  }
+  
+  ui.menu.style.display = 'none';
+  ui.game.style.display = 'block';
+  
+  initGame();
+}
+
+function clearIntervals() {
+  if (gameInterval) clearInterval(gameInterval);
+  if (aiInterval) clearInterval(aiInterval);
+  if (phantomInterval) clearInterval(phantomInterval);
+  if (state.springtrapTimer) clearTimeout(state.springtrapTimer);
+  if (springtrapAttackTimer) clearTimeout(springtrapAttackTimer);
+}
+
+// INICIALIZACIÓN DEL JUEGO
+function initGame() {
+  state.startTime = Date.now();
+  state.system = 100;
+  state.cams = Array(10).fill().map(()=>[]);
+  state.vents = {left:false, right:false, springtrapLocation: null};
+  state.audioActive = false;
+  state.currentCam = 1;
+  state.gameOver = false;
+  state.springtrapVisible = false;
+  state.phantomActive = false;
+  state.systemErrors = {audio: false, camera: false, vent: false, reboot: false, visual: false};
+
+  // Actualizar UI
+  ui.nightNum.textContent = state.night;
+  
+  // Ocultar avisos
+  ui.warningLeft.style.display = 'none';
+  ui.warningRight.style.display = 'none';
+  ui.springtrapBtn.style.display = 'none';
+  ui.phantomWindow.style.display = 'none';
+  
+  // Remover clases de error
+  document.body.classList.remove('audio-error', 'camera-error', 'reboot-error', 'system-error');
+  
+  // Configurar cámaras
+  ui.camGrid.innerHTML = '';
+  for(let i=1;i<=10;i++){
+    let b = document.createElement('button');
+    b.className='cam-btn'; 
+    b.textContent='CAM '+i; 
+    b.onclick=()=>setCam(i);
+    b.id='cam'+i;
+    ui.camGrid.appendChild(b);
+  }
+  document.getElementById('cam1').classList.add('active');
+
+  // Configurar controles
+  document.getElementById('btn-audio').onclick = toggleAudio;
+  document.getElementById('btn-reboot').onclick = rebootSystems;
+  ui.btnMenu.onclick = showMenu;
+
+  // Springtrap empieza en una ubicación aleatoria
+  state.vents.springtrapLocation = Math.random() < 0.5 ? 'left' : 'right';
+  updateVentWarnings();
+  showMessage(`Springtrap detectado en ventilación ${state.vents.springtrapLocation === 'left' ? 'izquierda' : 'derecha'}`, 3000);
+
+  // Iniciar bucles del juego
+  clearIntervals();
+  gameInterval = setInterval(gameLoop, 100);
+  aiInterval = setInterval(moveSpringtrap, Math.max(12000, 20000 - (state.night*1500)));
+  phantomInterval = setInterval(spawnPhantom, Math.max(8000, 15000 - (state.night*1000)));
+  
+  saveGame();
+}
+
+// ACTUALIZAR AVISOS DE VENTILACIONES
+function updateVentWarnings() {
+  if (state.vents.springtrapLocation === 'left') {
+    ui.warningLeft.style.display = 'block';
+    ui.warningRight.style.display = 'none';
+  } else if (state.vents.springtrapLocation === 'right') {
+    ui.warningLeft.style.display = 'none';
+    ui.warningRight.style.display = 'block';
+  } else {
+    ui.warningLeft.style.display = 'none';
+    ui.warningRight.style.display = 'none';
+  }
+}
+
+// MECÁNICAS DEL JUEGO
+function toggleAudio() {
+  if(state.gameOver || state.systemErrors.audio) return;
+  
+  state.audioActive = !state.audioActive;
+  const btn = document.getElementById('btn-audio');
+  if(state.audioActive) {
+    btn.textContent = "Audio ACTIVO";
+    btn.style.background = "#27ae60";
+    showMessage("Audio atrayente activado...", 2000);
+    
+    // El audio puede atraer a Springtrap
+    if(Math.random() < 0.6) {
+      setTimeout(() => {
+        showMessage("¡Springtrap se acerca al audio!", 2000);
+        moveSpringtrapCloser();
+      }, 1000);
+    }
+  } else {
+    btn.textContent = "Activar Audio";
+    btn.style.background = "#3498db";
+    showMessage("Audio desactivado", 1500);
+  }
+}
+
+function rebootSystems() {
+  if(state.gameOver || state.systemErrors.reboot) return;
+  
+  // Reinicio consume sistema pero repara errores
+  state.system = Math.max(0, state.system - 8);
+  
+  // Reparar todos los sistemas afectados por Phantoms
+  let fixedSystems = 0;
+  Object.keys(state.systemErrors).forEach(system => {
+    if(state.systemErrors[system]) {
+      state.systemErrors[system] = false;
+      fixedSystems++;
+      // Remover efectos visuales de error
+      if(system === 'audio') document.body.classList.remove('audio-error');
+      if(system === 'camera') document.body.classList.remove('camera-error');
+      if(system === 'reboot') document.body.classList.remove('reboot-error');
+      if(system === 'visual') document.body.classList.remove('system-error');
+    }
+  });
+  
+  if(fixedSystems > 0) {
+    showMessage(`Sistemas reiniciados - ${fixedSystems} errores reparados`, 3000);
+  } else {
+    showMessage("Sistemas reiniciados", 2000);
+  }
+  
+  // Posibilidad de que el reinicio aleje a Springtrap
+  if(Math.random() < 0.4 && state.springtrapVisible) {
+    redirectSpringtrap();
+  }
+}
+
+// MOVIMIENTO DE SPRINGTRAP
+function moveSpringtrap() {
+  if(state.gameOver) return;
+  
+  // Springtrap se mueve más rápido cada noche
+  const moveChance = 0.5 + (state.night * 0.15);
+  
+  if(Math.random() < moveChance) {
+    // Mover a Springtrap a una nueva ubicación
+    const oldLocation = state.vents.springtrapLocation;
+    const newLocation = Math.random() < 0.5 ? 'left' : 'right';
+    
+    if(oldLocation !== newLocation) {
+      state.vents.springtrapLocation = newLocation;
+      showMessage(`Springtrap se movió a ventilación ${newLocation === 'left' ? 'izquierda' : 'derecha'}`, 2500);
+      updateVentWarnings();
+      
+      // Posibilidad de que Springtrap aparezca después de moverse
+      if(Math.random() < 0.4 + (state.night * 0.1)) {
+        setTimeout(() => showSpringtrap(), 1000);
+      }
+    }
+  }
+}
+
+function moveSpringtrapCloser() {
+  // Mover a Springtrap más cerca de la oficina
+  if(state.vents.springtrapLocation === 'left') {
+    state.vents.springtrapLocation = 'right';
+  } else {
+    state.vents.springtrapLocation = 'left';
+  }
+  updateVentWarnings();
+  
+  // Alta probabilidad de que aparezca después de acercarse
+  if(Math.random() < 0.7) {
+    setTimeout(() => showSpringtrap(), 1500);
+  }
+}
+
+function showSpringtrap() {
+  if(state.gameOver || state.springtrapVisible) return;
+  
+  state.springtrapVisible = true;
+  ui.springtrapBtn.style.display = 'block';
+  showMessage("¡SPRINGTRAP EN LA VENTILACIÓN! - 2 SEGUNDOS PARA REACCIONAR", 1000);
+  
+  // Timer para el ataque de Springtrap - 2 segundos para reaccionar
+  springtrapAttackTimer = setTimeout(() => {
+    if(state.springtrapVisible) {
+      triggerJumpscare(SPRINGTRAP, "¡Springtrap te atrapó!");
+    }
+  }, 2000);
+}
+
+function redirectSpringtrap() {
+  if(state.gameOver || !state.springtrapVisible) return;
+  
+  // Redirigir a Springtrap lejos
+  state.springtrapVisible = false;
+  ui.springtrapBtn.style.display = 'none';
+  state.vents.springtrapLocation = null;
+  updateVentWarnings();
+  
+  showMessage("¡Ventilación cerrada! Springtrap redirigido", 2000);
+  
+  // Springtrap reaparecerá en una ubicación aleatoria después de un tiempo
+  state.springtrapTimer = setTimeout(() => {
+    state.vents.springtrapLocation = Math.random() < 0.5 ? 'left' : 'right';
+    updateVentWarnings();
+    showMessage("Springtrap detectado nuevamente en las ventilaciones", 3000);
+  }, 8000 - (state.night * 500));
+}
+
+// APARICIÓN DE PHANTOMS - ¡BUG CORREGIDO!
+function spawnPhantom() {
+  if(state.gameOver || state.phantomActive) return;
+  
+  const spawnChance = 0.4 + (state.night * 0.1);
+  if(Math.random() < spawnChance) {
+    const phantom = PHANTOMS[Math.floor(Math.random() * PHANTOMS.length)];
+    activatePhantom(phantom);
+  }
+}
+
+function activatePhantom(phantom) {
+  state.phantomActive = true;
+  ui.phantomEmoji.textContent = phantom.emoji;
+  ui.phantomMessage.textContent = phantom.message;
+  
+  // Aplicar efecto del Phantom
+  state.systemErrors[phantom.effect] = true;
+  
+  // Efectos visuales según el tipo de error
+  switch(phantom.effect) {
+    case "audio":
+      document.body.classList.add('audio-error');
+      break;
+    case "camera":
+      document.body.classList.add('camera-error');
+      break;
+    case "reboot":
+      document.body.classList.add('reboot-error');
+      break;
+    case "visual":
+      document.body.classList.add('system-error');
+      break;
+  }
+  
+  ui.phantomWindow.style.display = 'flex';
+  showMessage(`¡${phantom.id} apareció!`, 2000);
+  
+  // El Phantom permanece activo por un tiempo
+  setTimeout(() => {
+    state.phantomActive = false;
+    ui.phantomWindow.style.display = 'none';
+    showMessage("El phantom desapareció...", 1500);
+  }, phantom.duration);
+}
+
+function setCam(n){
+  state.currentCam = n;
+  document.querySelectorAll('.cam-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('cam'+n).classList.add('active');
+  updateCamScreen();
+}
+
+function updateCamScreen(){
+  // Mostrar ubicación de Springtrap en las cámaras
+  if(state.vents.springtrapLocation) {
+    ui.camScreen.textContent = `Springtrap: Vent ${state.vents.springtrapLocation === 'left' ? 'Izquierda' : 'Derecha'}`;
+  } else {
+    ui.camScreen.textContent = 'Springtrap: No detectado';
+  }
+}
+
+function showMessage(txt, t=4000){
+  ui.messageBar.textContent = txt;
+  setTimeout(()=>ui.messageBar.textContent='', t);
+}
+
+function gameLoop(){
+  if(state.gameOver) return;
+  const now = Date.now();
+  const elapsed = (now - state.startTime) / 1000;
+  const nightDuration = 300 + state.night*60;
+  const progress = elapsed / nightDuration;
+
+  // Reloj
+  const h = Math.min(5, Math.floor(progress * 6));
+  const m = Math.floor((progress * 6 - h) * 60);
+  ui.clock.textContent = `${h||12}:${m.toString().padStart(2,'0')} AM`;
+
+  // Barra de progreso de la noche
+  ui.nightFill.style.width = `${Math.min(100, progress * 100)}%`;
+
+  if(progress >= 1){ winNight(); return; }
+
+  // Deterioro del sistema base
+  let systemDrain = 0.012;
+  
+  // Drenaje adicional por audio activo
+  if(state.audioActive) systemDrain += 0.02;
+  
+  // Drenaje adicional cuando Springtrap está visible
+  if(state.springtrapVisible) systemDrain += 0.03;
+  
+  // Drenaje adicional por sistemas comprometidos
+  Object.values(state.systemErrors).forEach(error => {
+    if(error) systemDrain += 0.015;
+  });
+  
+  state.system = Math.max(0, state.system - systemDrain * state.night * 0.1);
+  ui.systemPct.textContent = Math.floor(state.system)+'%';
+  ui.systemFill.style.width = state.system+'%';
+  
+  // Cambio de color cuando el sistema es bajo
+  if(state.system <= 30) {
+    ui.systemFill.style.background = 'linear-gradient(to right,#e74c3c,#c0392b)';
+    if(state.system <= 15) {
+      ui.systemPct.classList.add('warning');
+    } else {
+      ui.systemPct.classList.remove('warning');
+    }
+  } else {
+    ui.systemFill.style.background = 'linear-gradient(to right,#2ecc71,#27ae60)';
+    ui.systemPct.classList.remove('warning');
+  }
+  
+  if(state.system <= 0){ 
+    triggerJumpscare(null,"¡Sistema colapsado!"); 
+    return; 
+  }
+}
+
+function triggerJumpscare(anim, reason){
+  if(state.gameOver) return;
+  state.gameOver = true;
+  ui.jumpscareFace.textContent = anim?.emoji || '💀';
+  ui.jumpscareReason.textContent = reason || "GAME OVER";
+  ui.jumpscare.classList.add('active');
+  setTimeout(() => {
+    ui.jumpscare.classList.remove('active');
+    showMenu();
+  }, 4000);
+}
+
+function winNight(){
+  state.gameOver = true;
+  const next = state.night >= 5 ? 1 : state.night + 1;
+  state.night = next;
+  saveGame();
+  ui.jumpscareFace.textContent = '🏆';
+  ui.jumpscareReason.textContent = `¡Noche ${state.night-1} completada!\n¡Noche ${next} desbloqueada!`;
+  ui.jumpscare.classList.add('active');
+  setTimeout(() => {
+    ui.jumpscare.classList.remove('active');
+    showMenu();
+  }, 6000);
+}
+
+// INICIALIZACIÓN DE LA APLICACIÓN
+document.getElementById('btn-single').onclick = () => startGame("single");
+document.getElementById('btn-continue').onclick = () => startGame("single", true);
+document.getElementById('btn-reset').onclick = () => {
+  resetGame();
+  showMenu();
+};
+
+// Cargar partida al iniciar
+loadGame();
+showMenu();
+</script>
+</body>
+</html>
